@@ -13,9 +13,9 @@ graph LR
         R2[Learn Patterns<br/>学習呼び出し]
     end
     
-    subgraph "Backend"
-        M[Memos]
-        API[API Server]
+    subgraph "Docker"
+        M[Memos<br/>:5230]
+        API[API Server<br/>:8080]
     end
     
     subgraph "データ"
@@ -24,8 +24,8 @@ graph LR
     
     R1 -->|"テキスト + ラベル"| M
     R2 -->|POST /learn| API
-    M -->|Docker Volume| D
-    API -->|collect + learn| D
+    API -->|GET /api/v1/memos| M
+    API -->|JSON| D
 ```
 
 ## データフロー
@@ -37,17 +37,17 @@ sequenceDiagram
     participant Memos
     participant API as API Server
     
-    Note over User,Memos: 1. テキスト保存 (Quick Send)
+    Note over User,Memos: 1. テキスト保存
     User->>Raycast: テキスト選択 + ショートカット
     Raycast->>Memos: POST /api/v1/memos<br/>(テキスト + #ai_bad or #good)
     Memos-->>Raycast: ✅ Saved
     
-    Note over User,API: 2. 学習呼び出し (Learn Patterns)
+    Note over User,API: 2. 学習呼び出し
     User->>Raycast: 学習コマンド実行
     Raycast->>API: POST /learn
     API->>Memos: GET /api/v1/memos
     Memos-->>API: ラベル付きメモ一覧
-    API->>API: パターン抽出 (モック)
+    API->>API: パターン抽出 (※現在モック)
     API-->>Raycast: ✅ 学習完了
 ```
 
@@ -56,55 +56,43 @@ sequenceDiagram
 ```
 quick-send/
 ├── client/
-│   ├── quick-send.rb       # テキスト保存 (Raycast)
+│   ├── raycast.rb          # テキスト保存 (Raycast)
 │   └── learn-patterns.rb   # 学習呼び出し (Raycast)
 ├── server/
-│   └── app.py              # API サーバー
-├── scripts/
-│   ├── collect_from_memos.py
-│   └── learn_patterns.py
+│   └── app.py              # API サーバー (collect + learn 統合)
 ├── prompts/
 │   ├── system.md
 │   └── pattern_learning.md
 ├── memos_data/
 │   ├── collected_texts.json
 │   └── learned_patterns.json
-└── compose.yml             # Memos + API Server
+└── compose.yml
 ```
 
-## コンポーネント詳細
+## API エンドポイント
 
-### Raycast スクリプト
-
-| スクリプト          | 機能                                 |
-| ------------------- | ------------------------------------ |
-| `quick-send.rb`     | 選択テキスト + ラベルを Memos に保存 |
-| `learn-patterns.rb` | API サーバーに学習リクエスト         |
-
-### API Server (`server/app.py`)
-
-| エンドポイント  | 説明                            |
-| --------------- | ------------------------------- |
-| `POST /learn`   | collect + learn-patterns を実行 |
-| `GET /patterns` | 学習済みパターンを取得          |
+| メソッド | パス        | 説明                      |
+| -------- | ----------- | ------------------------- |
+| POST     | `/collect`  | Memos からデータ収集      |
+| POST     | `/learn`    | データ収集 + パターン学習 |
+| GET      | `/patterns` | 学習済みパターンを取得    |
+| GET      | `/health`   | ヘルスチェック            |
 
 ## 環境変数
 
-| 変数名         | 説明                     | デフォルト              |
-| -------------- | ------------------------ | ----------------------- |
-| `MEMOS_URL`    | Memos API エンドポイント | `http://localhost:5230` |
-| `ACCESS_TOKEN` | Memos アクセストークン   | -                       |
+| 変数名               | 説明                     | デフォルト              |
+| -------------------- | ------------------------ | ----------------------- |
+| `MEMOS_URL`          | Memos API エンドポイント | `http://localhost:5230` |
+| `MEMOS_ACCESS_TOKEN` | Memos アクセストークン   | -                       |
 
-## コマンド一覧
+## コマンド
 
-| コマンド                 | 説明                       |
-| ------------------------ | -------------------------- |
-| `make up`                | Memos + API Server を起動  |
-| `make down`              | 停止                       |
-| `make cp-raycast-script` | Raycast スクリプトをコピー |
-
-## 今後の拡張
-
-1. **AI API 統合**: Google ADK (Gemini) でリアルなパターン抽出
-2. **Raycast からの学習起動**: バックエンド API サーバー追加
-3. **ファインチューニング**: Vertex AI で大規模データ対応
+| コマンド                  | 説明                       |
+| ------------------------- | -------------------------- |
+| `make up`                 | 起動                       |
+| `make down`               | 停止                       |
+| `make logs`               | API ログ表示               |
+| `make collect`            | データ収集                 |
+| `make learn`              | パターン学習               |
+| `make patterns`           | パターン表示               |
+| `make cp-raycast-scripts` | Raycast スクリプトをコピー |

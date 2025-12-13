@@ -20,7 +20,7 @@ services:
       - MEMOS_URL=http://memos:5230
     env_file:
       - .env
-    command: python server/app.py
+    command: sh -c "pip install -q requests && python server/app.py"
     depends_on:
       - memos
     restart: always
