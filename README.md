@@ -34,3 +34,7 @@ $ make cp-raycast-script
    1. Raycast が ON になっているか確認。
 3. プライバシーとセキュリティ -> オートメーション を開く。
    1. Raycast の項目を展開し、System Events が ON になっているか確認。
+
+## Reference
+
+- [Memos](https://github.com/usememos/memos)
