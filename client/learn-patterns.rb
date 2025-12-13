@@ -30,7 +30,7 @@ begin
   result = JSON.parse(response.body)
   if response.code == "200" && result["success"]
     count = result["collected"]["total"] || "?"
-    puts "✅ 学習完了 (#{count} パターン)"
+    puts "✅ 学習成功: 新たに収集したテキスト (#{count} 個)"
   else
     puts "❌ Error: #{result['error'] || response.code}"
   end
