@@ -17,21 +17,32 @@ require 'json'
 require 'net/http'
 require 'uri'
 
-# 1. AppleScriptを使って「Cmd+C」をシミュレートし、選択テキストをコピー
+# --- 修正ポイント 1 ---
+# Raycastのウィンドウが閉じて、元のアプリにフォーカスが戻るまで少し待つ
+sleep 0.5 
+
+# --- 修正ポイント 2 ---
+# 現在のクリップボードの中身を一旦退避（空にする）
+# これにより「コピーが失敗したのに前のデータを送ってしまう」事故を防ぐ
+system("pbcopy < /dev/null")
+
+# Cmd+C を送信 (System Events経由)
 system("osascript -e 'tell application \"System Events\" to keystroke \"c\" using {command down}'")
 
-# コピーが完了するまで少し待つ（これがないと古いクリップボードを読み込んでしまう）
-sleep 0.1
+# --- 修正ポイント 3 ---
+# OSがコピー処理を完了するのを確実に待つ (0.1秒だと失敗することがある)
+sleep 0.5
 
-# 2. クリップボードの中身を取得
+# クリップボードの中身を取得
 content = `pbpaste`.strip
 
+# エラーハンドリング: 中身が空なら通知を出して終了
 if content.empty?
-  puts "⚠️ No text selected"
+  puts "⚠️ Copy failed. Try again."
   exit 1
 end
 
-# 3. 送信データの準備
+# 送信処理
 category = ARGV[0] || "uncategorized"
 uri = URI.parse("http://localhost:3000/api/save")
 header = {'Content-Type': 'application/json'}
@@ -40,7 +51,6 @@ payload = {
   category: category
 }
 
-# 4. サーバーへPOST送信
 begin
   http = Net::HTTP.new(uri.host, uri.port)
   request = Net::HTTP::Post.new(uri.request_uri, header)
