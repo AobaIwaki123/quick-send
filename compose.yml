@@ -4,8 +4,8 @@ services:
     working_dir: /app
     volumes:
       - ./backend:/app
-      - /app/node_modules  # Exclude from bind mount (use container's own)
-      - ./backend/data:/app/data # DBを永続化
+      - /app/node_modules
+      - ./backend/data:/app/data # ここにDBが保存されている
     ports:
       - "3000:3000"
     command: sh -c "bun install && bun run server.js"
