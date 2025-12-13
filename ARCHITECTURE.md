@@ -8,26 +8,24 @@
 
 ```mermaid
 graph LR
-    subgraph "クライアント"
-        R[Raycast]
+    subgraph "Raycast"
+        R1[Quick Send<br/>テキスト保存]
+        R2[Learn Patterns<br/>学習呼び出し]
     end
     
-    subgraph "データストア"
+    subgraph "Backend"
         M[Memos]
+        API[API Server]
+    end
+    
+    subgraph "データ"
         D[(memos_data/)]
     end
     
-    subgraph "バッチ処理"
-        C[collect_from_memos.py]
-        L[learn_patterns.py]
-    end
-    
-    R -->|"テキスト + ラベル"| M
+    R1 -->|"テキスト + ラベル"| M
+    R2 -->|POST /learn| API
     M -->|Docker Volume| D
-    C -->|API| M
-    C -->|JSON出力| D
-    L -->|JSON入力| D
-    L -->|JSON出力| D
+    API -->|collect + learn| D
 ```
 
 ## データフロー
@@ -37,24 +35,20 @@ sequenceDiagram
     participant User
     participant Raycast
     participant Memos
-    participant Collect as collect_from_memos.py
-    participant Learn as learn_patterns.py
+    participant API as API Server
     
-    Note over User,Memos: Phase 1: データ収集
+    Note over User,Memos: 1. テキスト保存 (Quick Send)
     User->>Raycast: テキスト選択 + ショートカット
     Raycast->>Memos: POST /api/v1/memos<br/>(テキスト + #ai_bad or #good)
-    Memos-->>Raycast: 200 OK
+    Memos-->>Raycast: ✅ Saved
     
-    Note over Collect,Learn: Phase 2: パターン学習
-    User->>Collect: make collect
-    Collect->>Memos: GET /api/v1/memos
-    Memos-->>Collect: ラベル付きメモ一覧
-    Collect->>Collect: collected_texts.json 保存
-    
-    User->>Learn: make learn-patterns
-    Learn->>Learn: collected_texts.json 読込
-    Learn->>Learn: パターン抽出 (※現在モック)
-    Learn->>Learn: learned_patterns.json 保存
+    Note over User,API: 2. 学習呼び出し (Learn Patterns)
+    User->>Raycast: 学習コマンド実行
+    Raycast->>API: POST /learn
+    API->>Memos: GET /api/v1/memos
+    Memos-->>API: ラベル付きメモ一覧
+    API->>API: パターン抽出 (モック)
+    API-->>Raycast: ✅ 学習完了
 ```
 
 ## ディレクトリ構成
@@ -62,40 +56,37 @@ sequenceDiagram
 ```
 quick-send/
 ├── client/
-│   └── raycast.rb          # Raycast スクリプト
+│   ├── quick-send.rb       # テキスト保存 (Raycast)
+│   └── learn-patterns.rb   # 学習呼び出し (Raycast)
+├── server/
+│   └── app.py              # API サーバー
 ├── scripts/
-│   ├── collect_from_memos.py   # データ収集
-│   └── learn_patterns.py       # パターン学習
+│   ├── collect_from_memos.py
+│   └── learn_patterns.py
 ├── prompts/
-│   ├── system.md               # システムプロンプト
-│   └── pattern_learning.md     # パターン学習プロンプト
+│   ├── system.md
+│   └── pattern_learning.md
 ├── memos_data/
-│   ├── collected_texts.json    # 収集データ
-│   └── learned_patterns.json   # 学習結果
-├── compose.yml                 # Docker Compose (Memos)
-└── Makefile                    # コマンド定義
+│   ├── collected_texts.json
+│   └── learned_patterns.json
+└── compose.yml             # Memos + API Server
 ```
 
 ## コンポーネント詳細
 
-### 1. Raycast スクリプト (`client/raycast.rb`)
+### Raycast スクリプト
 
-- 選択テキストを取得
-- ドロップダウンでラベル選択 (👎 AI感 / 👍 好き)
-- Memos API にハッシュタグ付きで投稿
+| スクリプト          | 機能                                 |
+| ------------------- | ------------------------------------ |
+| `quick-send.rb`     | 選択テキスト + ラベルを Memos に保存 |
+| `learn-patterns.rb` | API サーバーに学習リクエスト         |
 
-### 2. データ収集 (`scripts/collect_from_memos.py`)
+### API Server (`server/app.py`)
 
-- Memos API からメモ一覧を取得
-- `#ai_bad` / `#good` タグでフィルタリング
-- `memos_data/collected_texts.json` に保存
-
-### 3. パターン学習 (`scripts/learn_patterns.py`)
-
-- 収集データを読み込み
-- プロンプトを生成（`prompts/pattern_learning.md`）
-- AI API でパターン抽出 (**現在はモック**)
-- `memos_data/learned_patterns.json` に保存
+| エンドポイント  | 説明                            |
+| --------------- | ------------------------------- |
+| `POST /learn`   | collect + learn-patterns を実行 |
+| `GET /patterns` | 学習済みパターンを取得          |
 
 ## 環境変数
 
@@ -108,10 +99,8 @@ quick-send/
 
 | コマンド                 | 説明                       |
 | ------------------------ | -------------------------- |
-| `make up`                | Memos を起動               |
-| `make down`              | Memos を停止               |
-| `make collect`           | データ収集                 |
-| `make learn-patterns`    | パターン学習               |
+| `make up`                | Memos + API Server を起動  |
+| `make down`              | 停止                       |
 | `make cp-raycast-script` | Raycast スクリプトをコピー |
 
 ## 今後の拡張
