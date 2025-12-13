@@ -7,5 +7,6 @@
 
 ```sh
 $ make up
-Server running on http://localhost:3000
+Text Listenr: http://lomakecalhost:3000
+Viewer: http://localhost:8055
 ```

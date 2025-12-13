@@ -5,7 +5,29 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./backend/data:/app/data # ここにDBが保存されている
+      - ./backend/data:/app/data
     ports:
       - "3000:3000"
     command: sh -c "bun install && bun run server.js"
+
+  # ★変更: NocoDB -> Directus
+  directus:
+    image: directus/directus:latest
+    ports:
+      - "8055:8055"
+    volumes:
+      # 既存のDBファイルをマウント
+      - ./backend/data:/data
+      # アップロード画像などを保存する領域（今回はテキストのみなら不要だが念のため）
+      - ./backend/uploads:/directus/uploads
+    environment:
+      KEY: "random-key-string"
+      SECRET: "random-secret-string"
+      
+      # SQLiteの設定
+      DB_CLIENT: "sqlite3"
+      DB_FILENAME: "/data/snippets.db"
+      
+      # 管理者アカウント初期設定
+      ADMIN_EMAIL: "admin@example.com"
+      ADMIN_PASSWORD: "password"
