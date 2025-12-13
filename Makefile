@@ -1,4 +1,4 @@
-.PHONY: help up down collect train eval clean
+.PHONY: help up down logs collect learn clean cp-raycast-scripts
 
 help: ## このヘルプを表示
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -8,44 +8,34 @@ up: ## Memos + API Server を起動
 	@echo "Memos: http://localhost:5230"
 	@echo "API:   http://localhost:8080"
 
-down: ## Memosを停止
+down: ## 停止
 	docker compose down
 
-collect: ## Memosからデータを収集
-	python scripts/collect_from_memos.py
+logs: ## ログを表示
+	docker compose logs -f api
 
-learn-patterns: ## 収集データからパターンを学習
-	python scripts/learn_patterns.py
+collect: ## データを収集 (API経由)
+	@curl -s -X POST http://localhost:8080/collect | python3 -m json.tool
 
-train: ## 学習データを準備 (Vertex AI用、オプション)
-	python scripts/train_model.py
+learn: ## パターン学習 (API経由)
+	@curl -s -X POST http://localhost:8080/learn | python3 -m json.tool
+
+patterns: ## 学習済みパターンを表示 (API経由)
+	@curl -s http://localhost:8080/patterns | python3 -m json.tool
 
 clean: ## 生成ファイルを削除
 	rm -rf memos_data/*.json memos_data/*.jsonl
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
-install: ## 依存パッケージをインストール
-	pip install -r requirements.txt
-
-cp-raycast-scripts: ## Raycastスクリプトをコピー (要ACCESS_TOKEN設定)
+cp-raycast-scripts: ## Raycastスクリプトをコピー
 	@if [ ! -f .env ]; then \
-		echo "Error: .env file not found. Please create it from .env.example"; \
+		echo "Error: .env file not found"; \
 		exit 1; \
 	fi
 	@. ./.env && \
-	sed "s/PLACE_HOLDER/$$ACCESS_TOKEN/" client/raycast.rb > ~/raycast-scripts/quick-send.rb && \
+	sed "s/PLACE_HOLDER/$$MEMOS_ACCESS_TOKEN/" client/raycast.rb > ~/raycast-scripts/quick-send.rb && \
 	chmod +x ~/raycast-scripts/quick-send.rb && \
 	cp client/learn-patterns.rb ~/raycast-scripts/learn-patterns.rb && \
 	chmod +x ~/raycast-scripts/learn-patterns.rb && \
 	echo "✅ Raycast scripts copied to ~/raycast-scripts/"
-
-format: ## コードフォーマット
-	black scripts/ src/
-	
-lint: ## コードチェック
-	flake8 scripts/ src/
-	mypy scripts/ src/
-
-test: ## テスト実行
-	pytest tests/
