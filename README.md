@@ -1,12 +1,12 @@
 ## Abstract
 
-- Client: Raycast extention (Shell Script) for senidng selected text to backend
-- Backend: Listen text data
+RaycastとMemosを組み合わせた文章収集ツール
+
+cmd + i で選択したテキストをMemosに転送する
 
 ## Quick Start
 
 ```sh
 $ make up
-Text Listenr: http://lomakecalhost:3000
-Viewer: http://localhost:8055
+Memos: http://lomakecalhost:5230
 ```

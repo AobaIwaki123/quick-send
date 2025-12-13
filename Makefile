@@ -1,7 +1,6 @@
 up:
 	@docker compose up -d
-	@echo "Text Listenr: http://localhost:3000"
-	@echo "Viewer: http://localhost:8080"
+	@echo "Memos: http://localhost:5230"
 
 down:
 	@docker compose down
