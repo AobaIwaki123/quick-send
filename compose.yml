@@ -4,6 +4,7 @@ services:
     working_dir: /app
     volumes:
       - ./backend:/app
+      - /app/node_modules  # Exclude from bind mount (use container's own)
       - ./backend/data:/app/data # DBを永続化
     ports:
       - "3000:3000"

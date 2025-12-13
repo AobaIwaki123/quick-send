@@ -1,0 +1,7 @@
+up:
+	@docker compose up -d
+	@echo "Server running on http://localhost:3000"
+
+down:
+	@docker compose down
+	@echo "Server stopped"
