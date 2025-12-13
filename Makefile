@@ -5,3 +5,6 @@ up:
 down:
 	@docker compose down
 	@echo "Server stopped"
+
+cp-raycast-script:
+	@cp client/raycast.sh /Users/aobaiwaki/Documents/Raycast/scripts

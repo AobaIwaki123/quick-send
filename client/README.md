@@ -1,0 +1,1 @@
+Raycastの設定画面を開き、Extensions -> Scripts -> Add Script Directory で適当なフォルダを指定し、そこに`raycast.sh`を配置します。
