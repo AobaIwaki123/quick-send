@@ -18,7 +18,9 @@ Memos: http://lomakecalhost:5230
 ### Memosのアクセストークンを取得する
 
 Memos左下の「Settings」→「My Account」→「Access Tokens」を選択。
+
 `.env.example`を参考に、`.env`を作成する。
+
 Raycastに拡張スクリプトを追加 (自己責任でお願いします)
 
 ```sh
@@ -37,4 +39,4 @@ $ make cp-raycast-script
 
 ## Reference
 
-- [Memos](https://github.com/usememos/memos)
+- [Memos - GitHub](https://github.com/usememos/memos)
