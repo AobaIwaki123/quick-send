@@ -121,3 +121,34 @@ graph TB
     style L fill:#fce4ec
     style M fill:#fce4ec
 ```
+
+## Architecture
+
+```mermaid
+graph LR
+    A[Raycast] -->|収集| B[Memos]
+    A -->|分析| C[Cloud Functions]
+    C -->|AI分析| D[Google AI]
+    D -->|結果| B
+    B --> E[(Firestore)]
+    E -->|学習| F[ADK Agents]
+    F -->|改善| B
+```
+
+```mermaid
+sequenceDiagram
+    participant Raycast
+    participant Memos
+    participant Firestore
+    participant AI as Google AI
+    participant Agent as ADK Agents
+    Raycast->>Memos: テキストを送信
+    Memos->>Firestore: テキストを保存
+    Raycast->>AI: 収集したテキストの分析依頼
+    AI->>Memos: テキストの分析結果を投稿
+    Memos->>Firestore: 分析結果を保存
+    Note over Agent: 定期実行
+    Agent->>Firestore: 分析後のデータを取得
+    Agent->>Agent: パターン学習
+    Agent->>Memos: アンチパターンをまとめたプロンプトを投稿
+```
