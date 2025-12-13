@@ -6,7 +6,7 @@ RaycastとMemosを組み合わせた文章収集ツール
 
 cmd + i で選択したテキストをMemosに転送する
 
-<img src="img/demo.png" alt="demo" width="400">
+<img src="img/demo.png" alt="demo" width="800">
 
 ## Quick Start
 
