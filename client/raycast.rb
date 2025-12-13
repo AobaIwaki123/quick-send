@@ -18,7 +18,7 @@ require 'net/http'
 require 'uri'
 
 # --- 設定項目: ここにMemosのアクセストークンを貼ってください ---
-ACCESS_TOKEN = "PLACE_HOLDER" # envファイルからmake cmdで自動補完される
+ACCESS_TOKEN = "PLACE_HOLDER" # make cp-raycast-scriptで自動補完される
 MEMOS_URL = "http://localhost:5230/api/v1/memos"
 # -------------------------------------------------------
 
