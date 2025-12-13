@@ -34,8 +34,6 @@ cp-raycast-scripts: ## Raycastスクリプトをコピー
 		exit 1; \
 	fi
 	@. ./.env && \
-	sed "s/PLACE_HOLDER/$$MEMOS_ACCESS_TOKEN/" client/raycast.rb > ~/raycast-scripts/quick-send.rb && \
-	chmod +x ~/raycast-scripts/quick-send.rb && \
-	cp client/learn-patterns.rb ~/raycast-scripts/learn-patterns.rb && \
-	chmod +x ~/raycast-scripts/learn-patterns.rb && \
-	echo "✅ Raycast scripts copied to ~/raycast-scripts/"
+	sed "s/PLACE_HOLDER/$$MEMOS_ACCESS_TOKEN/" client/raycast.rb > /Users/aobaiwaki/Documents/Raycast/scripts/raycast.rb && \
+	cp client/learn-patterns.rb /Users/aobaiwaki/Documents/Raycast/scripts/learn-patterns.rb && \
+	echo "✅ Raycast scripts copied to /Users/aobaiwaki/Documents/Raycast/scripts/"
