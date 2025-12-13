@@ -3,9 +3,10 @@
 help: ## このヘルプを表示
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-up: ## Memosを起動
+up: ## Memos + API Server を起動
 	docker compose up -d
 	@echo "Memos: http://localhost:5230"
+	@echo "API:   http://localhost:8080"
 
 down: ## Memosを停止
 	docker compose down
@@ -27,15 +28,17 @@ clean: ## 生成ファイルを削除
 install: ## 依存パッケージをインストール
 	pip install -r requirements.txt
 
-cp-raycast-script: ## Raycastスクリプトをコピー (要ACCESS_TOKEN設定)
+cp-raycast-scripts: ## Raycastスクリプトをコピー (要ACCESS_TOKEN設定)
 	@if [ ! -f .env ]; then \
 		echo "Error: .env file not found. Please create it from .env.example"; \
 		exit 1; \
 	fi
 	@. ./.env && \
-	sed "s/PLACE_HOLDER/$$ACCESS_TOKEN/" raycast/quick-send.rb > ~/raycast-scripts/quick-send.rb && \
+	sed "s/PLACE_HOLDER/$$ACCESS_TOKEN/" client/raycast.rb > ~/raycast-scripts/quick-send.rb && \
 	chmod +x ~/raycast-scripts/quick-send.rb && \
-	echo "✅ Raycast script copied to ~/raycast-scripts/"
+	cp client/learn-patterns.rb ~/raycast-scripts/learn-patterns.rb && \
+	chmod +x ~/raycast-scripts/learn-patterns.rb && \
+	echo "✅ Raycast scripts copied to ~/raycast-scripts/"
 
 format: ## コードフォーマット
 	black scripts/ src/
