@@ -4,9 +4,13 @@
 
 RaycastとMemosを組み合わせた文章収集ツール
 
-cmd + i で選択したテキストをMemosに転送する
+`cmd + i` など、設定したショートカットキーで選択したテキストをMemosに転送する
 
 <img src="img/demo.png" alt="demo" width="800">
+
+## Purpose
+
+AI感のある雑な文章を効率的に収集し、アンチパターンとしてAIに投入できるようにする。
 
 ## Quick Start
 
