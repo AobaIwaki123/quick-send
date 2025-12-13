@@ -2,13 +2,13 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Save to Memos
+# @raycast.title Quick Send
 # @raycast.mode silent
 # @raycast.packageName Data Collector
 
 # Optional parameters:
-# @raycast.icon 📝
-# @raycast.argument1 { "type": "dropdown", "placeholder": "Category", "data": [{"title": "🤮 不快なAI", "value": "ai_bad"}, {"title": "✨ 良文", "value": "good"}, {"title": "👻 不気味", "value": "uncanny"}] }
+# @raycast.icon ⚡
+# @raycast.argument1 { "type": "dropdown", "placeholder": "Category", "data": [{"title": "👎 AI感", "value": "ai_bad"}, {"title": "👍 好き", "value": "good"}] }
 
 # Documentation:
 # @raycast.description Memosへテキストを保存します
@@ -22,13 +22,14 @@ ACCESS_TOKEN = "PLACE_HOLDER" # envファイルからmake cmdで自動補完さ�
 MEMOS_URL = "http://localhost:5230/api/v1/memos"
 # -------------------------------------------------------
 
-# 1. 選択テキストの取得 (前回と同じ処理)
+# 1. 選択テキストの取得
 sleep 0.5
-system("pbcopy < /dev/null")
-system("osascript -e 'tell application \"System Events\" to keystroke \"c\" using {command down}'")
+system("pbcopy < /dev/null") # clipboardをクリア
+system("osascript -e 'tell application \"System Events\" to keystroke \"c\" using {command down}'") # 選択テキストをコピー
 sleep 0.5
-content = `pbpaste`.strip
+content = `pbpaste`.strip # clipboardからテキストを取得
 
+# テキストの存在チェック
 if content.empty?
   puts "⚠️ No text selected"
   exit 1
