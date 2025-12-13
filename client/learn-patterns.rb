@@ -28,9 +28,8 @@ begin
   
   response = http.request(request)
   result = JSON.parse(response.body)
-  
   if response.code == "200" && result["success"]
-    count = result["patterns_count"] || "?"
+    count = result["collected"]["total"] || "?"
     puts "✅ 学習完了 (#{count} パターン)"
   else
     puts "❌ Error: #{result['error'] || response.code}"
