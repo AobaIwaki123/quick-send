@@ -12,6 +12,30 @@ RaycastとMemosを組み合わせた文章収集ツール
 
 AI感のある雑な文章を効率的に収集し、アンチパターンとしてAIに投入できるようにする。
 
+## 実装計画
+
+```sh
+.
+├── data/
+│   ├── collected_texts.json      # Memosから収集したラベル付きデータ
+│   ├── learned_patterns.json     # AIが学習したパターン
+│   └── training.jsonl            # 学習用データ (JSONL形式、オプション)
+├── prompts/
+│   ├── system.txt                # システムプロンプト
+│   ├── pattern_learning.md      # パターン学習用プロンプト
+│   └── ai_detection.txt          # AI感検出用プロンプト
+├── scripts/
+│   ├── collect_from_memos.py     # Memosからデータ収集
+│   ├── learn_patterns.py         # ユーザーの判断からパターン学習
+│   └── train_model.py            # Vertex AIで学習 (オプション)
+├── src/
+│   └── agent.py                  # ADK Agent実装 (学習済みパターンベース)
+├── .env.example
+├── requirements.txt
+├── Makefile
+└── README.md
+```
+
 ## Quick Start
 
 ```sh
