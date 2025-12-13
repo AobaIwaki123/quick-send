@@ -12,12 +12,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MEMOS_URL = os.getenv("MEMOS_URL", "http://localhost:5230")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+MEMOS_ACCESS_TOKEN = os.getenv("MEMOS_ACCESS_TOKEN")
 
 
 def fetch_memos() -> List[Dict]:
     """Memosから全てのメモを取得"""
-    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    headers = {"Authorization": f"Bearer {MEMOS_ACCESS_TOKEN}"}
     response = requests.get(f"{MEMOS_URL}/api/v1/memos", headers=headers)
     response.raise_for_status()
     return response.json().get("memos", [])
