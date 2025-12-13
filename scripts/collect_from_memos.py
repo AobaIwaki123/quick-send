@@ -47,7 +47,7 @@ def parse_memo(memo: Dict) -> Dict:
     }
 
 
-def save_dataset(data: List[Dict], output_path: str = "data/collected_texts.json"):
+def save_dataset(data: List[Dict], output_path: str = "memos_data/collected_texts.json"):
     """データセットをJSON形式で保存"""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     

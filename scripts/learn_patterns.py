@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # パス設定
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "memos_data"
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 DATASET_PATH = DATA_DIR / "collected_texts.json"
 PATTERNS_PATH = DATA_DIR / "learned_patterns.json"
@@ -201,8 +201,7 @@ def main():
     print_summary(patterns)
     
     print("\n次のステップ:")
-    print("  1. data/learned_patterns.json を確認")
-    print("  2. python src/agent.py で新しい文章を評価")
+    print("  1. memos_data/learned_patterns.json を確認")
 
 
 if __name__ == "__main__":

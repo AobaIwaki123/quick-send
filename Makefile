@@ -20,7 +20,7 @@ train: ## 学習データを準備 (Vertex AI用、オプション)
 	python scripts/train_model.py
 
 clean: ## 生成ファイルを削除
-	rm -rf data/*.json data/*.jsonl
+	rm -rf memos_data/*.json memos_data/*.jsonl
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
