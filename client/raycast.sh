@@ -2,53 +2,51 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Save Selected Text
+# @raycast.title Save to Memos
 # @raycast.mode silent
 # @raycast.packageName Data Collector
 
 # Optional parameters:
-# @raycast.icon 🤖
+# @raycast.icon 📝
 # @raycast.argument1 { "type": "dropdown", "placeholder": "Category", "data": [{"title": "🤮 不快なAI", "value": "ai_bad"}, {"title": "✨ 良文", "value": "good"}, {"title": "👻 不気味", "value": "uncanny"}] }
 
 # Documentation:
-# @raycast.description 選択中のテキストを自動コピーして送信します
+# @raycast.description Memosへテキストを保存します
 
 require 'json'
 require 'net/http'
 require 'uri'
 
-# --- 修正ポイント 1 ---
-# Raycastのウィンドウが閉じて、元のアプリにフォーカスが戻るまで少し待つ
-sleep 0.5 
+# --- 設定項目: ここにMemosのアクセストークンを貼ってください ---
+ACCESS_TOKEN = "PLACE_HOLDER" # envファイルからmake cmdで自動補完される
+MEMOS_URL = "http://localhost:5230/api/v1/memos"
+# -------------------------------------------------------
 
-# --- 修正ポイント 2 ---
-# 現在のクリップボードの中身を一旦退避（空にする）
-# これにより「コピーが失敗したのに前のデータを送ってしまう」事故を防ぐ
-system("pbcopy < /dev/null")
-
-# Cmd+C を送信 (System Events経由)
-system("osascript -e 'tell application \"System Events\" to keystroke \"c\" using {command down}'")
-
-# --- 修正ポイント 3 ---
-# OSがコピー処理を完了するのを確実に待つ (0.1秒だと失敗することがある)
+# 1. 選択テキストの取得 (前回と同じ処理)
 sleep 0.5
-
-# クリップボードの中身を取得
+system("pbcopy < /dev/null")
+system("osascript -e 'tell application \"System Events\" to keystroke \"c\" using {command down}'")
+sleep 0.5
 content = `pbpaste`.strip
 
-# エラーハンドリング: 中身が空なら通知を出して終了
 if content.empty?
-  puts "⚠️ Copy failed. Try again."
+  puts "⚠️ No text selected"
   exit 1
 end
 
-# 送信処理
-category = ARGV[0] || "uncategorized"
-uri = URI.parse("http://localhost:3000/api/save")
-header = {'Content-Type': 'application/json'}
+# 2. タグの形成 (Memosはハッシュタグ形式 #tag で管理します)
+tag_key = ARGV[0] || "uncategorized"
+final_content = "#{content}\n\n##{tag_key}"
+
+# 3. Memos APIへ送信
+uri = URI.parse(MEMOS_URL)
+header = {
+  'Content-Type': 'application/json',
+  'Authorization': "Bearer #{ACCESS_TOKEN}"
+}
 payload = {
-  content: content,
-  category: category
+  content: final_content,
+  visibility: "PRIVATE" # 公開範囲
 }
 
 begin
@@ -58,9 +56,10 @@ begin
   response = http.request(request)
 
   if response.code == "200"
-    puts "✅ Saved: #{category}"
+    puts "✅ Saved to Memos"
   else
-    puts "❌ Error: #{response.code}"
+    # エラー詳細を表示
+    puts "❌ Error: #{response.code} #{response.body}"
   end
 rescue => e
   puts "❌ Connection Failed"
