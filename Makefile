@@ -11,6 +11,8 @@ up: ## Memos + API Server を起動
 down: ## 停止
 	docker compose down
 
+restart: down up
+
 logs: ## ログを表示
 	docker compose logs -f api
 
