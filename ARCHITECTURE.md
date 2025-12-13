@@ -18,6 +18,11 @@ graph LR
         API[API Server<br/>:8080]
     end
     
+    subgraph "Google AI"
+        NL[Natural Language API<br/>感情分析]
+        G[Gemini API<br/>パターン生成]
+    end
+    
     subgraph "データ"
         D[(memos_data/)]
     end
@@ -25,30 +30,30 @@ graph LR
     R1 -->|"テキスト + ラベル"| M
     R2 -->|POST /learn| API
     API -->|GET /api/v1/memos| M
+    API -->|感情分析| NL
+    API -->|パターン生成| G
     API -->|JSON| D
 ```
 
-## データフロー
+## 学習パイプライン
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Raycast
-    participant Memos
     participant API as API Server
+    participant NL as Natural Language API
+    participant Gemini
     
-    Note over User,Memos: 1. テキスト保存
-    User->>Raycast: テキスト選択 + ショートカット
-    Raycast->>Memos: POST /api/v1/memos<br/>(テキスト + #ai_bad or #good)
-    Memos-->>Raycast: ✅ Saved
+    API->>API: Memosからデータ収集
     
-    Note over User,API: 2. 学習呼び出し
-    User->>Raycast: 学習コマンド実行
-    Raycast->>API: POST /learn
-    API->>Memos: GET /api/v1/memos
-    Memos-->>API: ラベル付きメモ一覧
-    API->>API: パターン抽出 (※現在モック)
-    API-->>Raycast: ✅ 学習完了
+    loop 各テキスト
+        API->>NL: 感情分析
+        NL-->>API: score, magnitude
+    end
+    
+    API->>API: 特徴量を集計
+    API->>Gemini: プロンプト + 特徴量
+    Gemini-->>API: パターン (JSON)
+    API->>API: learned_patterns.json 保存
 ```
 
 ## ディレクトリ構成
@@ -59,7 +64,9 @@ quick-send/
 │   ├── raycast.rb          # テキスト保存 (Raycast)
 │   └── learn-patterns.rb   # 学習呼び出し (Raycast)
 ├── server/
-│   └── app.py              # API サーバー (collect + learn 統合)
+│   ├── app.py              # API サーバー
+│   ├── nl_api.py           # Natural Language API クライアント
+│   └── gemini.py           # Gemini API クライアント
 ├── prompts/
 │   ├── system.md
 │   └── pattern_learning.md
@@ -80,10 +87,22 @@ quick-send/
 
 ## 環境変数
 
-| 変数名               | 説明                     | デフォルト              |
-| -------------------- | ------------------------ | ----------------------- |
-| `MEMOS_URL`          | Memos API エンドポイント | `http://localhost:5230` |
-| `MEMOS_ACCESS_TOKEN` | Memos アクセストークン   | -                       |
+| 変数名               | 説明                     | デフォルト     |
+| -------------------- | ------------------------ | -------------- |
+| `MEMOS_URL`          | Memos API エンドポイント | localhost:5230 |
+| `MEMOS_ACCESS_TOKEN` | Memos アクセストークン   | -              |
+| `GEMINI_API_KEY`     | Gemini API キー          | -              |
+| `GEMINI_MODEL`       | 使用モデル               | 2.5-flash      |
+| `ENABLE_NL_API`      | NL API を有効化          | false          |
+
+## Gemini モデル
+
+| キー      | モデル名                     |
+| --------- | ---------------------------- |
+| 2.0-flash | gemini-2.0-flash             |
+| 2.5-flash | gemini-2.5-flash             |
+| 2.5-pro   | gemini-2.5-pro-preview-06-05 |
+| 3.0-pro   | gemini-3.0-pro-preview       |
 
 ## コマンド
 

@@ -102,60 +102,104 @@ def learn_patterns(dataset: Dict[str, List[str]]) -> Dict:
     """
     データセットからパターンを学習
     
-    TODO: 実際の実装では、ここでADKやVertex AIのAPIを呼び出す
+    1. NL API で各テキストの感情分析を実行
+    2. Gemini でパターンを抽出・言語化
     """
-    # デモ用のダミーパターン
-    patterns = {
-        "patterns": [
-            {
-                "id": "pattern_1",
-                "name": "過度な丁寧語の使用",
-                "description": "「〜させていただく」「〜でございます」などの丁寧語が頻出し、不自然に礼儀正しい印象を与える",
-                "strength": "strong",
-                "frequency": 0.75,
-                "examples_from_data": [
-                    "本日はお忙しい中ご参加いただきありがとうございます",
-                    "ご説明させていただきます"
-                ],
-                "synthetic_examples": [
-                    "こちらの資料をご覧いただけますでしょうか",
-                    "ご確認させていただきたく存じます"
-                ],
-                "detection_rule": "「させていただく」が1文中に2回以上、または文章全体で頻出する場合"
-            },
-            {
-                "id": "pattern_2",
-                "name": "機械的な箇条書き構造",
-                "description": "「まず」「次に」「最後に」の定型的な展開が多用される",
-                "strength": "medium",
-                "frequency": 0.60,
-                "examples_from_data": [
-                    "まず、背景について説明します。次に、具体的な手順を示します。最後にまとめます。"
-                ],
-                "synthetic_examples": [
-                    "第一に〜、第二に〜、第三に〜",
-                    "1つ目は〜、2つ目は〜、3つ目は〜"
-                ],
-                "detection_rule": "「まず/次に/最後に」または番号付けが連続して出現"
-            }
-        ],
-        "summary": {
-            "total_patterns": 2,
-            "strong_indicators": ["過度な丁寧語の使用"],
-            "common_features": {
-                "lexical": ["させていただく", "ございます", "存じます"],
-                "syntactic": ["箇条書き", "番号付けリスト"],
-                "semantic": ["過度に形式的", "個人的視点の欠如"]
-            }
-        },
-        "insights": [
-            "ユーザーは形式的すぎる文章をAI感があると判断する傾向",
-            "具体例や個人的な視点がある文章は「良い」と評価される"
-        ],
-        "metadata": {
-            "ai_bad_count": len(dataset["ai_bad"]),
-            "good_count": len(dataset["good"])
+    from .nl_api import nl_client
+    from .gemini import gemini_client
+    
+    # 1. NL API で特徴抽出（感情分析）
+    features = {
+        "ai_bad": [],
+        "good": []
+    }
+    
+    for text in dataset["ai_bad"]:
+        sentiment = nl_client.analyze_sentiment(text)
+        features["ai_bad"].append({
+            "text": text,
+            "sentiment_score": sentiment.score if sentiment else 0,
+            "sentiment_magnitude": sentiment.magnitude if sentiment else 0
+        })
+    
+    for text in dataset["good"]:
+        sentiment = nl_client.analyze_sentiment(text)
+        features["good"].append({
+            "text": text,
+            "sentiment_score": sentiment.score if sentiment else 0,
+            "sentiment_magnitude": sentiment.magnitude if sentiment else 0
+        })
+    
+    # 2. 特徴量の統計を計算
+    def calc_stats(items):
+        if not items:
+            return {"avg_score": 0, "avg_magnitude": 0}
+        scores = [i["sentiment_score"] for i in items]
+        magnitudes = [i["sentiment_magnitude"] for i in items]
+        return {
+            "avg_score": sum(scores) / len(scores),
+            "avg_magnitude": sum(magnitudes) / len(magnitudes)
         }
+    
+    stats = {
+        "ai_bad": calc_stats(features["ai_bad"]),
+        "good": calc_stats(features["good"])
+    }
+    
+    # 3. プロンプトを構築
+    def format_examples(texts: List[str], max_examples: int = 20) -> str:
+        if not texts:
+            return "(データなし)"
+        examples = texts[:max_examples]
+        formatted = [f"{i+1}. {text}" for i, text in enumerate(examples)]
+        if len(texts) > max_examples:
+            formatted.append(f"\n... 他 {len(texts) - max_examples} 件")
+        return "\n".join(formatted)
+    
+    # プロンプトテンプレートを読み込み
+    prompt_path = PROMPTS_DIR / "pattern_learning.md"
+    if prompt_path.exists():
+        with open(prompt_path, "r", encoding="utf-8") as f:
+            prompt_template = f.read()
+        
+        prompt = prompt_template.format(
+            ai_bad_examples=format_examples(dataset["ai_bad"]),
+            good_examples=format_examples(dataset["good"])
+        )
+        
+        # 感情分析の統計情報を追加
+        prompt += f"\n\n## 感情分析の統計 (Natural Language AI API)\n"
+        prompt += f"- AI感がある文章: 平均スコア={stats['ai_bad']['avg_score']:.2f}, 強度={stats['ai_bad']['avg_magnitude']:.2f}\n"
+        prompt += f"- 良い文章: 平均スコア={stats['good']['avg_score']:.2f}, 強度={stats['good']['avg_magnitude']:.2f}\n"
+    else:
+        prompt = f"""
+以下のデータを分析し、「AI感がある」文章のパターンを抽出してください。
+
+AI感がある文章:
+{format_examples(dataset["ai_bad"])}
+
+良い文章:
+{format_examples(dataset["good"])}
+
+JSON形式で出力してください。
+"""
+    
+    # 4. Gemini でパターン生成
+    system_prompt_path = PROMPTS_DIR / "system.md"
+    system_instruction = None
+    if system_prompt_path.exists():
+        with open(system_prompt_path, "r", encoding="utf-8") as f:
+            system_instruction = f.read()
+    
+    patterns = gemini_client.generate_json(prompt, system_instruction)
+    
+    # メタデータを追加
+    patterns["metadata"] = {
+        "ai_bad_count": len(dataset["ai_bad"]),
+        "good_count": len(dataset["good"]),
+        "sentiment_stats": stats,
+        "model": gemini_client.model_name,
+        "nl_api_enabled": nl_client.enabled
     }
     
     return patterns
