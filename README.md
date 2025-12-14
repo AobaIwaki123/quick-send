@@ -12,28 +12,37 @@ RaycastとMemosを組み合わせた文章収集ツール
 
 AI感のある雑な文章を効率的に収集し、アンチパターンとしてAIに投入できるようにする。
 
-## 実装計画
+## ディレクトリ構成
 
 ```sh
 .
-├── data/
-│   ├── collected_texts.json      # Memosから収集したラベル付きデータ
-│   ├── learned_patterns.json     # AIが学習したパターン
-│   └── training.jsonl            # 学習用データ (JSONL形式、オプション)
-├── prompts/
-│   ├── system.txt                # システムプロンプト
-│   ├── pattern_learning.md      # パターン学習用プロンプト
-│   └── ai_detection.txt          # AI感検出用プロンプト
-├── scripts/
-│   ├── collect_from_memos.py     # Memosからデータ収集
-│   ├── learn_patterns.py         # ユーザーの判断からパターン学習
-│   └── train_model.py            # Vertex AIで学習 (オプション)
-├── src/
-│   └── agent.py                  # ADK Agent実装 (学習済みパターンベース)
-├── .env.example
-├── requirements.txt
-├── Makefile
-└── README.md
+├── client/                        # Raycast用クライアントスクリプト
+│   ├── raycast.rb                # Memosへテキスト送信
+│   └── learn-patterns.rb         # パターン学習スクリプト
+├── server/                        # バックエンドサーバー
+│   ├── app.py                    # FastAPI アプリケーション
+│   ├── gemini.py                 # Gemini API連携
+│   └── nl_api.py                 # Natural Language API
+├── memos_data/                    # Memosデータ格納
+│   ├── collected_texts.json      # 収集したラベル付きデータ
+│   ├── learned_patterns.json     # 学習済みパターン
+│   └── memos_prod.db             # Memos SQLiteデータベース
+├── prompts/                       # プロンプトテンプレート
+│   ├── system.md                 # システムプロンプト
+│   └── pattern_learning.md       # パターン学習用プロンプト
+├── docs/                          # ドキュメント
+│   ├── JSON.md                   # JSON仕様
+│   └── arch-prompt.md            # アーキテクチャプロンプト
+├── img/                           # 画像リソース
+│   └── demo.png                  # デモ画像
+├── creds/                         # 認証情報 (gitignore推奨)
+├── compose.yml                    # Docker Compose設定
+├── Makefile                       # Make コマンド定義
+├── pyproject.toml                 # Python依存関係管理
+├── .env.example                   # 環境変数テンプレート
+├── ARCHITECTURE.md                # アーキテクチャドキュメント
+├── workflow.md                    # ワークフロー説明
+└── README.md                      # このファイル
 ```
 
 ## Quick Start
