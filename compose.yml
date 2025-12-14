@@ -1,6 +1,6 @@
 services:
   memos:
-    image: neosmemo/memos:stable
+    image: iwakiaoba/aoba-memos:v1.0.0
     container_name: memos
     volumes:
       - ./memos_data:/var/opt/memos
