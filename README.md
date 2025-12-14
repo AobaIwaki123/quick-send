@@ -30,19 +30,6 @@ AI感のある雑な文章を効率的に収集し、アンチパターンとし
 ├── prompts/                       # プロンプトテンプレート
 │   ├── system.md                 # システムプロンプト
 │   └── pattern_learning.md       # パターン学習用プロンプト
-├── docs/                          # ドキュメント
-│   ├── JSON.md                   # JSON仕様
-│   └── arch-prompt.md            # アーキテクチャプロンプト
-├── img/                           # 画像リソース
-│   └── demo.png                  # デモ画像
-├── creds/                         # 認証情報 (gitignore推奨)
-├── compose.yml                    # Docker Compose設定
-├── Makefile                       # Make コマンド定義
-├── pyproject.toml                 # Python依存関係管理
-├── .env.example                   # 環境変数テンプレート
-├── ARCHITECTURE.md                # アーキテクチャドキュメント
-├── workflow.md                    # ワークフロー説明
-└── README.md                      # このファイル
 ```
 
 ## Quick Start
