@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     command: >
-      sh -c "pip install -q requests google-generativeai google-cloud-language &&
+      sh -c "pip --root-user-action install -q requests google-generativeai google-cloud-language &&
              python -m server.app"
     depends_on:
       - memos

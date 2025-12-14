@@ -14,7 +14,10 @@ down: ## 停止
 restart: down up
 
 logs: ## ログを表示
-	docker compose logs -f api
+	docker compose logs
+
+health: ## 健康チェック
+	@curl -s http://localhost:8080/health | python3 -m json.tool
 
 collect: ## データを収集 (API経由)
 	@curl -s -X POST http://localhost:8080/collect | python3 -m json.tool
