@@ -1,6 +1,6 @@
 # Cloud Run 移行と Firestore 統合計画
 
-Local ファイルシステムに依存している `quick-send` API サーバーのデータを Google Cloud Firestore に移行し、Cloud Run 上でのステートレスな運用を実現します。
+Local ファイルシステムに依存している `quick-send` API サーバーのデータを Google Cloud Firestore に移行し、Memos データを Cloud SQL に移行することで、Cloud Run 上でのステートレスな運用を実現します。
 
 ## アーキテクチャの変更
 
@@ -50,38 +50,29 @@ graph LR
     API_RUN -->|API Call| M_RUN
 ```
 
-## なぜ Cloud SQL が必要で、BigQuery は適していないのですか？
+## 5. Memos サービスの Cloud Run 移行計画
 
-> [!WARNING]
-> **結論: Memos サービスには BigQuery は使用できません。Cloud SQL (PostgreSQL/MySQL) が必須です。**
+API サーバーの Firestore 化に加え、Memos 本体を Cloud Run + Cloud SQL に移行します。
 
-理由はアプリケーションの特性とデータベースの用途の違いにあります。
+### Memos の構成変更
+- **Docker Image**: 公式イメージ `neosmemo/memos:stable` または現在のカスタムイメージ `iwakiaoba/aoba-memos:v1.0.0` を使用。
+- **Database**: SQLite から PostgreSQL (Cloud SQL) に変更。
+- **Environment Variables**:
+    - `DRIVER`: `postgres`
+    - `DSN`: `postgresql://[USER]:[PASSWORD]@localhost/[DB_NAME]?host=/cloudsql/[PROJECT_ID]:[REGION]:[INSTANCE_NAME]`
 
-| 特徴            | Cloud SQL (PostgreSQL)                                                                                               | BigQuery                                                                                          |
-| :-------------- | :------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------ |
-| **主な用途**    | **OLTP (オンライントランザクション処理)**<br>Webアプリのバックエンド、ユーザー管理、メモの保存など、頻繁な読み書き。 | **OLAP (オンライン分析処理)**<br>大量データの分析、集計、レポート作成。                           |
-| **応答速度**    | **ミリ秒単位** (非常に高速)<br>アプリの画面を瞬時に表示するのに向いています。                                        | **数百ミリ秒〜数秒**<br>大量データのスキャンには速いが、Webアプリのリアルタイム応答には遅すぎる。 |
-| **Memosの対応** | **公式サポート** (SQLite, MySQL, PostgreSQL)                                                                         | **非対応** (そもそも接続できません)                                                               |
-| **料金体系**    | 起動時間に対して課金 (24時間稼働なら定額に近い)                                                                      | クエリでスキャンしたデータ量、または保存容量に対して課金                                          |
+### Cloud SQL (PostgreSQL) の構成
+- **Edition**: Enterprise (または開発用に Micro インスタンス)
+- **Version**: PostgreSQL 15, 16 など最新の安定版
+- **Connection**: Cloud Run からは Unix Socket 経由で接続
 
-**要約**:
-1.  **Memos 本体は BigQuery に対応していません。** ドライバーが存在せず、アプリが起動しません。
-2.  仮に対応していたとしても、BigQuery は「メモを1つ保存する」「一覧を表示する」といったWebアプリの細かい動作には遅すぎて向きません。
-
-### コストを抑えたい場合の Cloud SQL 代替案
-
-Cloud SQL の月額コスト (~$15) がネックとなる場合、以下のクラウドネイティブな構成も検討できますが、セットアップの難易度が上がります。
-
-1.  **SQLite on Cloud Storage FUSE**:
-    - Cloud Run サイドカーを使って GCS バケットをファイルシステムとしてマウントし、そこに SQLite ファイル (`memos_prod.db`) を置く方法。
-    - **メリット**: ほぼ無料 (GCS料金のみ)。
-    - **デメリット**: 同時書き込みに弱く、データベース破損のリスクが完全にはゼロではない（最近はサポートされましたが、設定には注意が必要）。また、Cloud SQL より遅い。
-
-**今回の計画では、安定性とセットアップの容易さから Cloud SQL (または FUSE + SQLite) を推奨しますが、実装作業は「API ServerのFirestore化」に集中します。**
+### データ移行戦略
+1.  **新規作成**: PostgreSQL で新規データベースとして開始する（推奨）。蓄積済みのメモは手動で再登録、または Memos のエクスポート/インポート機能を利用する。
+2.  **SQLite からの移行**: `pgloader` 等のツールを使って SQLite ファイルを PostgreSQL にダンプする、あるいは Memos のバックアップ機能で JSON エクスポートし、新しい環境で復元する。
 
 ---
 
-## 提案される変更 (詳細)
+## 提案される変更 (詳細: API Server)
 
 ### Python API サーバー (`server/`)
 

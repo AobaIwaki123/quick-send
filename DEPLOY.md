@@ -8,9 +8,7 @@
 2.  **gcloud CLI**: インストール済みで、認証が完了していること (`gcloud auth login`)。
 3.  **プロジェクト設定**: `gcloud config set project [YOUR_PROJECT_ID]`。
 
-## デプロイ手順
-
-`Makefile` を使用して、ビルドとデプロイを簡単に行えます。デフォルトの変数（`PROJECT_ID`, `REGION` など）は、コマンドライン引数で上書き可能です。
+## API Server のデプロイ
 
 ### 1. コンテナイメージのビルド
 
@@ -29,33 +27,35 @@ make gcp-build PROJECT_ID=quick-send-prod
 make gcp-deploy PROJECT_ID=quick-send-prod REGION=asia-northeast1
 ```
 
-**注意**:
-- 初回のデプロイ時に、サービスエージェントの作成許可を求められる場合があります（`y` を入力）。
-- このコマンドには `--allow-unauthenticated` が含まれており、API が一般公開されます。アクセス制限を行いたい場合は、このフラグを削除してください。
+**デプロイ後の設定**:
+`make gcp-deploy` は最小限の構成でデプロイします。Memos と連携するために、以下の環境変数を Cloud Console 等から追加してください：
+- `MEMOS_URL`: デプロイした Memos の URL (例: `https://memos-xxxxx-an.a.run.app`)
+- `GEMINI_API_KEY`: API キー
 
-### 3. デプロイの確認
+---
 
-デプロイ完了後、サービス URL が出力されます（例: `https://quick-send-api-xxxxx-an.a.run.app`）。
+## Memos のデプロイ (Cloud SQL 使用)
 
-ステータスを確認します：
+Memos 本体を Cloud Run にデプロイします。こちらは Dockerfile のビルドは不要で、公式イメージを使用します。
+
+### 1. Cloud SQL 接続情報の確認
+以下の情報を用意してください（`MANUAL.md` で作成したもの）。
+- **接続名**: `Project-ID:Region:Instance-ID` (例: `quick-send-prod:asia-northeast1:memos-db`)
+- **DBユーザー**: `memos`
+- **DBパスワード**: `[PASSWORD]`
+- **DB名**: `memos`
+
+### 2. デプロイコマンドの実行
+
+以下のコマンドを実行してデプロイします。`MEMOS_DB_PASS` にはデータベース作成時に設定したパスワードを指定してください。
+
 ```sh
-curl https://[YOUR-SERVICE-URL]/health
+make gcp-deploy-memos \
+  PROJECT_ID=quick-send-prod \
+  MEMOS_DB_INSTANCE=quick-send-prod:asia-northeast1:memos-db \
+  MEMOS_DB_PASS=your-strong-password
 ```
 
-## 環境変数
-
-`make gcp-deploy` コマンドは基本的な環境変数を設定します。`MEMOS_URL` や `GEMINI_API_KEY` など、その他の変数は Cloud Console やコマンドラインから追加設定する必要があります。
-
-**方法 A: Cloud Console (推奨)**
-1.  Cloud Run > `quick-send-api` > **新しいリビジョンの編集とデプロイ** に移動します。
-2.  **変数とシークレット** タブを開きます。
-3.  `MEMOS_URL` (Memos サービスの URL) を追加します。
-4.  `GEMINI_API_KEY` を追加します（セキュリティ向上のため Secret Manager の利用を推奨）。
-
-**方法 B: コマンドライン**
-`Makefile` を修正して `--set-env-vars` を追加するか、手動でコマンドを実行します：
-```sh
-gcloud run services update quick-send-api \
-  --set-env-vars MEMOS_URL=http://your-memos-url,GEMINI_API_KEY=your-key \
-  --region asia-northeast1
-```
+*解説*:
+- `--add-cloudsql-instances`: Cloud Run サイドカーとして Cloud SQL Proxy を起動し、Unix Socket 経由で接続できるようにします。
+- `DSN`: Memos が接続するための接続文字列です。`@localhost` となっていますが、Cloud SQL Proxy 経由で接続されます。

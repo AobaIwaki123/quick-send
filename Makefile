@@ -65,3 +65,20 @@ gcp-config: ## デプロイ設定の確認
 	@echo "Project: $(PROJECT_ID)"
 	@echo "Region:  $(REGION)"
 	@echo "Image:   $(IMAGE_NAME)"
+
+# --- Memos Cloud Run Deployment ---
+
+MEMOS_SERVICE_NAME ?= memos
+MEMOS_DB_INSTANCE ?= $(PROJECT_ID):$(REGION):memos-db
+MEMOS_DB_PASS ?= your-password
+
+gcp-deploy-memos: ## Memos 本体を Cloud Run へデプロイ
+	gcloud run deploy $(MEMOS_SERVICE_NAME) \
+		--image neosmemo/memos:stable \
+		--platform managed \
+		--region $(REGION) \
+		--allow-unauthenticated \
+		--add-cloudsql-instances $(MEMOS_DB_INSTANCE) \
+		--set-env-vars DRIVER=postgres \
+		--set-env-vars DSN="postgresql://memos:$(MEMOS_DB_PASS)@localhost/memos?host=/cloudsql/$(MEMOS_DB_INSTANCE)" \
+		--port 5230
