@@ -42,3 +42,26 @@ cp-raycast-scripts: ## Raycastスクリプトをコピー
 	sed "s/PLACE_HOLDER/$$MEMOS_ACCESS_TOKEN/" client/raycast.rb > /Users/aobaiwaki/Documents/Raycast/scripts/raycast.rb && \
 	cp client/learn-patterns.rb /Users/aobaiwaki/Documents/Raycast/scripts/learn-patterns.rb && \
 	echo "✅ Raycast scripts copied to /Users/aobaiwaki/Documents/Raycast/scripts/"
+
+# --- Cloud Run Deployment ---
+
+PROJECT_ID ?= your-project-id
+REGION ?= asia-northeast1
+SERVICE_NAME ?= quick-send-api
+IMAGE_NAME ?= gcr.io/$(PROJECT_ID)/$(SERVICE_NAME)
+
+gcp-build: ## Dockerイメージをビルド (Google Cloud Build)
+	gcloud builds submit --tag $(IMAGE_NAME) .
+
+gcp-deploy: ## Cloud Run へデプロイ
+	gcloud run deploy $(SERVICE_NAME) \
+		--image $(IMAGE_NAME) \
+		--platform managed \
+		--region $(REGION) \
+		--allow-unauthenticated \
+		--set-env-vars PROJECT_ID=$(PROJECT_ID)
+
+gcp-config: ## デプロイ設定の確認
+	@echo "Project: $(PROJECT_ID)"
+	@echo "Region:  $(REGION)"
+	@echo "Image:   $(IMAGE_NAME)"
