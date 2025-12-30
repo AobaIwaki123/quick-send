@@ -8,7 +8,9 @@ from http.server import BaseHTTPRequestHandler
 
 from .config import DATA_DIR
 from .data_collector import data_collector
+from .data_collector import data_collector
 from .pattern_learner import pattern_learner
+from .firestore_client import firestore_client
 
 
 class APIHandler(BaseHTTPRequestHandler):
@@ -60,11 +62,20 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def handle_get_patterns(self):
         """学習済みパターンを取得"""
-        patterns_path = DATA_DIR / "learned_patterns.json"
-        if patterns_path.exists():
-            with open(patterns_path, "r", encoding="utf-8") as f:
-                patterns = json.load(f)
-            self.send_json(patterns)
+        patterns = None
+        
+        if firestore_client.db:
+            patterns = firestore_client.load_patterns()
+        
+        if not patterns:
+            # Fallback to local
+            patterns_path = DATA_DIR / "learned_patterns.json"
+            if patterns_path.exists():
+                with open(patterns_path, "r", encoding="utf-8") as f:
+                    patterns = json.load(f)
+
+        if patterns:
+             self.send_json(patterns)
         else:
             self.send_json({"error": "パターンがありません"}, status=404)
 

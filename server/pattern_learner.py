@@ -9,19 +9,27 @@ from typing import Dict, List
 from .config import DATA_DIR, PROMPTS_DIR
 from .gemini import gemini_client
 from .nl_api import nl_client
+from .firestore_client import firestore_client
 
 
 class PatternLearner:
     """データセットからパターンを学習"""
+    
+    def __init__(self, db_client=firestore_client):
+        self.db_client = db_client
 
     def load_dataset(self) -> Dict[str, List[str]]:
         """データセットを読み込み、ラベルごとに分類"""
-        dataset_path = DATA_DIR / "collected_texts.json"
-        if not dataset_path.exists():
-            return {"ai_bad": [], "good": []}
-
-        with open(dataset_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        if self.db_client and self.db_client.db:
+            data = self.db_client.load_collected_texts()
+        else:
+            # Fallback to local
+            print("⚠️ Loading from local JSON (Fallback)")
+            dataset_path = DATA_DIR / "collected_texts.json"
+            if not dataset_path.exists():
+                return {"ai_bad": [], "good": []}
+            with open(dataset_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
 
         return {
             "ai_bad": [item["text"] for item in data if item["label"] == "ai_bad"],
@@ -81,10 +89,14 @@ class PatternLearner:
         patterns = self.learn_patterns(dataset)
 
         # 保存
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = DATA_DIR / "learned_patterns.json"
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(patterns, f, ensure_ascii=False, indent=2)
+        if self.db_client and self.db_client.db:
+            self.db_client.save_patterns(patterns)
+        else:
+             print("⚠️ Saving to local JSON (Fallback)")
+             DATA_DIR.mkdir(parents=True, exist_ok=True)
+             output_path = DATA_DIR / "learned_patterns.json"
+             with open(output_path, "w", encoding="utf-8") as f:
+                 json.dump(patterns, f, ensure_ascii=False, indent=2)
 
         return {
             "success": True,
