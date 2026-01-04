@@ -45,7 +45,7 @@ cp-raycast-scripts: ## Raycastスクリプトをコピー
 
 # --- Cloud Run Deployment ---
 
-PROJECT_ID ?= your-project-id
+PROJECT_ID ?= th-zenn-ai-hackathon
 REGION ?= asia-northeast1
 SERVICE_NAME ?= quick-send-api
 IMAGE_NAME ?= gcr.io/$(PROJECT_ID)/$(SERVICE_NAME)

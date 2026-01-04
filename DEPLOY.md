@@ -16,7 +16,7 @@ Docker イメージをビルドし、Cloud Build を使用して Google Containe
 
 ```sh
 # 'your-project-id' を実際のプロジェクトIDに置き換えてください
-make gcp-build PROJECT_ID=quick-send-prod
+make gcp-build PROJECT_ID=th-zenn-ai-hackathon
 ```
 
 ### 2. Cloud Run へのデプロイ
@@ -24,7 +24,7 @@ make gcp-build PROJECT_ID=quick-send-prod
 イメージを Cloud Run にデプロイします。
 
 ```sh
-make gcp-deploy PROJECT_ID=quick-send-prod REGION=asia-northeast1
+make gcp-deploy PROJECT_ID=th-zenn-ai-hackathon REGION=asia-northeast1
 ```
 
 **デプロイ設定**:
@@ -32,7 +32,7 @@ make gcp-deploy PROJECT_ID=quick-send-prod REGION=asia-northeast1
 
 ```sh
 make gcp-deploy \
-  PROJECT_ID=quick-send-prod \
+  PROJECT_ID=th-zenn-ai-hackathon \
   REGION=asia-northeast1 \
   MEMOS_URL=https://memos-xxxxx-an.a.run.app \
   GEMINI_API_KEY=your-api-key
@@ -48,7 +48,7 @@ Memos 本体を Cloud Run にデプロイします。こちらは Dockerfile の
 
 ### 1. Cloud SQL 接続情報の確認
 以下の情報を用意してください（`MANUAL.md` で作成したもの）。
-- **接続名**: `Project-ID:Region:Instance-ID` (例: `quick-send-prod:asia-northeast1:memos-db`)
+- **接続名**: `Project-ID:Region:Instance-ID` (例: `th-zenn-ai-hackathon:asia-northeast1:memos-db`)
 - **DBユーザー**: `memos`
 - **DBパスワード**: `[PASSWORD]`
 - **DB名**: `memos`
@@ -59,8 +59,8 @@ Memos 本体を Cloud Run にデプロイします。こちらは Dockerfile の
 
 ```sh
 make gcp-deploy-memos \
-  PROJECT_ID=quick-send-prod \
-  MEMOS_DB_INSTANCE=quick-send-prod:asia-northeast1:memos-db \
+  PROJECT_ID=th-zenn-ai-hackathon \
+  MEMOS_DB_INSTANCE=th-zenn-ai-hackathon:asia-northeast1:memos-db \
   MEMOS_DB_PASS=your-strong-password
 ```
 
