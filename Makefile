@@ -91,6 +91,6 @@ gcp-deploy-memos: ## Memos 本体を Cloud Run へデプロイ
 		--region $(REGION) \
 		--allow-unauthenticated \
 		--add-cloudsql-instances $(MEMOS_DB_INSTANCE) \
-		--set-env-vars DRIVER=postgres \
-		--set-env-vars DSN="postgresql://memos:$(MEMOS_DB_PASS)@localhost/memos?host=/cloudsql/$(MEMOS_DB_INSTANCE)" \
+		--set-env-vars MEMOS_DRIVER=postgres \
+		--set-env-vars MEMOS_DSN="postgresql://memos:$(MEMOS_DB_PASS)@/memos?host=/cloudsql/$(MEMOS_DB_INSTANCE)" \
 		--port 5230

@@ -58,8 +58,8 @@ API サーバーの Firestore 化に加え、Memos 本体を Cloud Run + Cloud S
 - **Docker Image**: 公式イメージ `neosmemo/memos:stable` または現在のカスタムイメージ `iwakiaoba/aoba-memos:v1.0.0` を使用。
 - **Database**: SQLite から PostgreSQL (Cloud SQL) に変更。
 - **Environment Variables**:
-    - `DRIVER`: `postgres`
-    - `DSN`: `postgresql://[USER]:[PASSWORD]@localhost/[DB_NAME]?host=/cloudsql/[PROJECT_ID]:[REGION]:[INSTANCE_NAME]`
+    - `MEMOS_DRIVER`: `postgres`
+    - `MEMOS_DSN`: `postgresql://[USER]:[PASSWORD]@localhost/[DB_NAME]?host=/cloudsql/[PROJECT_ID]:[REGION]:[INSTANCE_NAME]`
 
 ### Cloud SQL (PostgreSQL) の構成
 - **Edition**: Enterprise (または開発用に Micro インスタンス)

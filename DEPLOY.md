@@ -68,4 +68,4 @@ make gcp-deploy-memos \
 
 *解説*:
 - `--add-cloudsql-instances`: Cloud Run サイドカーとして Cloud SQL Proxy を起動し、Unix Socket 経由で接続できるようにします。
-- `DSN`: Memos が接続するための接続文字列です。`@localhost` となっていますが、Cloud SQL Proxy 経由で接続されます。
+- `MEMOS_DSN`: Memos が接続するための接続文字列です。`@localhost` となっていますが、Cloud SQL Proxy 経由で接続されます。
