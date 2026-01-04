@@ -74,12 +74,19 @@ gcp-config: ## デプロイ設定の確認
 # --- Memos Cloud Run Deployment ---
 
 MEMOS_SERVICE_NAME ?= memos
+MEMOS_LOCAL_IMAGE ?= iwakiaoba/aoba-memos:v1.0.0
+MEMOS_GCR_IMAGE ?= gcr.io/$(PROJECT_ID)/memos
 MEMOS_DB_INSTANCE ?= $(PROJECT_ID):$(REGION):memos-db
 MEMOS_DB_PASS ?= your-password
 
+gcp-push-memos: ## Memos イメージを GCR にプッシュ
+	docker pull $(MEMOS_LOCAL_IMAGE)
+	docker tag $(MEMOS_LOCAL_IMAGE) $(MEMOS_GCR_IMAGE)
+	docker push $(MEMOS_GCR_IMAGE)
+
 gcp-deploy-memos: ## Memos 本体を Cloud Run へデプロイ
 	gcloud run deploy $(MEMOS_SERVICE_NAME) \
-		--image neosmemo/memos:stable \
+		--image $(MEMOS_GCR_IMAGE) \
 		--platform managed \
 		--region $(REGION) \
 		--allow-unauthenticated \
