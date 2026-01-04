@@ -100,7 +100,8 @@ class PatternLearner:
 
         return {
             "success": True,
-            "patterns_count": len(patterns["patterns"]),
+            "patterns_count": len(patterns.get("patterns", [])),
+            "patterns": patterns.get("patterns", []),
             "ai_bad_count": len(dataset["ai_bad"]),
             "good_count": len(dataset["good"])
         }

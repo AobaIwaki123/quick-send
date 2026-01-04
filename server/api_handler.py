@@ -52,6 +52,18 @@ class APIHandler(BaseHTTPRequestHandler):
             if "error" in learn_result:
                 self.send_json(learn_result, status=400)
             else:
+                # 学習完了通知
+                try:
+                    from .memos_client import memos_client
+                    
+                    patterns = learn_result.get("patterns", [])
+                    pattern_json = json.dumps(patterns, ensure_ascii=False, indent=2)
+                    
+                    content = f"Learning completed.\n\n```json\n{pattern_json}\n```\n\n#learn"
+                    memos_client.create_memo(content)
+                except Exception as e:
+                    print(f"Failed to post notification: {e}")
+
                 self.send_json({
                     "success": True,
                     "collected": collect_result,
