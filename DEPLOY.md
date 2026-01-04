@@ -21,15 +21,6 @@ make gcp-build PROJECT_ID=th-zenn-ai-hackathon
 
 ### 2. Cloud Run へのデプロイ
 
-イメージを Cloud Run にデプロイします。
-
-```sh
-make gcp-deploy PROJECT_ID=th-zenn-ai-hackathon REGION=asia-northeast1
-```
-
-**デプロイ設定**:
-`Makefile` を更新したので、デプロイ時に環境変数を直接指定できます：
-
 ```sh
 make gcp-deploy \
   PROJECT_ID=th-zenn-ai-hackathon \
@@ -40,8 +31,6 @@ make gcp-deploy \
   MEMOS_LEARN_AGENT_TOKEN=optional-agent-token \
   GEMINI_MODEL=2.5-flash
 ```
-
-もちろん、Cloud Console から後で設定することも可能です。
 
 ---
 
