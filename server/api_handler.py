@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""
+API リクエストハンドラ
+"""
+
+import json
+from http.server import BaseHTTPRequestHandler
+
+from .config import DATA_DIR
+from .data_collector import data_collector
+from .data_collector import data_collector
+from .pattern_learner import pattern_learner
+from .firestore_client import firestore_client
+
+
+class APIHandler(BaseHTTPRequestHandler):
+    """HTTP API リクエストハンドラ"""
+
+    def do_GET(self):
+        if self.path == "/health":
+            self.send_json({"status": "ok"})
+        elif self.path == "/patterns":
+            self.handle_get_patterns()
+        else:
+            self.send_error(404)
+
+    def do_POST(self):
+        if self.path == "/collect":
+            self.handle_collect()
+        elif self.path == "/learn":
+            self.handle_learn()
+        else:
+            self.send_error(404)
+
+    def handle_collect(self):
+        """データ収集"""
+        try:
+            result = data_collector.collect_and_save()
+            self.send_json({"success": True, **result})
+        except Exception as e:
+            self.send_json({"error": str(e)}, status=500)
+
+    def handle_learn(self):
+        """学習処理（collect + learn）"""
+        try:
+            # 1. データ収集
+            collect_result = data_collector.collect_and_save()
+
+            # 2. パターン学習
+            learn_result = pattern_learner.run()
+
+            if "error" in learn_result:
+                self.send_json(learn_result, status=400)
+            else:
+                # 学習完了通知
+                try:
+                    from .memos_client import memos_client
+                    
+                    patterns = learn_result.get("patterns", [])
+                    pattern_json = json.dumps(patterns, ensure_ascii=False, indent=2)
+                    
+                    content = f"Learning completed.\n\n```json\n{pattern_json}\n```\n\n#learn"
+                    memos_client.create_memo(content)
+                except Exception as e:
+                    print(f"Failed to post notification: {e}")
+
+                self.send_json({
+                    "success": True,
+                    "collected": collect_result,
+                    "learned": learn_result
+                })
+        except Exception as e:
+            self.send_json({"error": str(e)}, status=500)
+
+    def handle_get_patterns(self):
+        """学習済みパターンを取得"""
+        patterns = None
+        
+        if firestore_client.db:
+            patterns = firestore_client.load_patterns()
+        
+        if not patterns:
+            # Fallback to local
+            patterns_path = DATA_DIR / "learned_patterns.json"
+            if patterns_path.exists():
+                with open(patterns_path, "r", encoding="utf-8") as f:
+                    patterns = json.load(f)
+
+        if patterns:
+             self.send_json(patterns)
+        else:
+            self.send_json({"error": "パターンがありません"}, status=404)
+
+    def send_json(self, data, status=200):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+    def log_message(self, format, *args):
+        print(f"[{self.log_date_time_string()}] {args[0]}")

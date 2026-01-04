@@ -19,7 +19,7 @@ require 'uri'
 
 # --- 設定項目: ここにMemosのアクセストークンを貼ってください ---
 ACCESS_TOKEN = "PLACE_HOLDER" # make cp-raycast-scriptで自動補完される
-MEMOS_URL = "http://localhost:5230/api/v1/memos"
+MEMOS_URL = "https://memos-976586712956.asia-northeast1.run.app/api/v1/memos"
 # -------------------------------------------------------
 
 # 1. 選択テキストの取得
@@ -52,6 +52,7 @@ payload = {
 
 begin
   http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = (uri.scheme == "https")
   request = Net::HTTP::Post.new(uri.request_uri, header)
   request.body = payload.to_json
   response = http.request(request)

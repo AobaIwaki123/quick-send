@@ -1,0 +1,40 @@
+#!/usr/bin/ruby
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Learn Patterns
+# @raycast.mode silent
+# @raycast.packageName Data Collector
+
+# Optional parameters:
+# @raycast.icon 🧠
+
+# Documentation:
+# @raycast.description パターン学習を実行します
+
+require 'json'
+require 'net/http'
+require 'uri'
+
+API_URL = "https://quick-send-api-976586712956.asia-northeast1.run.app/learn"
+
+begin
+  uri = URI.parse(API_URL)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = (uri.scheme == "https")
+  http.read_timeout = 60  # 学習に時間がかかる場合を考慮
+  
+  request = Net::HTTP::Post.new(uri.request_uri)
+  request['Content-Type'] = 'application/json'
+  
+  response = http.request(request)
+  result = JSON.parse(response.body)
+  if response.code == "200" && result["success"]
+    count = result["collected"]["total"] || "?"
+    puts "✅ 学習成功: 新たに収集したテキスト (#{count} 個)"
+  else
+    puts "❌ Error: #{result['error'] || response.code}"
+  end
+rescue => e
+  puts "❌ Connection Failed: #{e.message}"
+end
