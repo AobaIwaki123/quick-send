@@ -53,13 +53,16 @@ IMAGE_NAME ?= gcr.io/$(PROJECT_ID)/$(SERVICE_NAME)
 gcp-build: ## Dockerイメージをビルド (Google Cloud Build)
 	gcloud builds submit --tag $(IMAGE_NAME) .
 
+MEMOS_URL ?= ""
+GEMINI_API_KEY ?= ""
+
 gcp-deploy: ## Cloud Run へデプロイ
 	gcloud run deploy $(SERVICE_NAME) \
 		--image $(IMAGE_NAME) \
 		--platform managed \
 		--region $(REGION) \
 		--allow-unauthenticated \
-		--set-env-vars PROJECT_ID=$(PROJECT_ID)
+		--set-env-vars PROJECT_ID=$(PROJECT_ID),MEMOS_URL=$(MEMOS_URL),GEMINI_API_KEY=$(GEMINI_API_KEY)
 
 gcp-config: ## デプロイ設定の確認
 	@echo "Project: $(PROJECT_ID)"

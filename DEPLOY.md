@@ -27,10 +27,18 @@ make gcp-build PROJECT_ID=quick-send-prod
 make gcp-deploy PROJECT_ID=quick-send-prod REGION=asia-northeast1
 ```
 
-**デプロイ後の設定**:
-`make gcp-deploy` は最小限の構成でデプロイします。Memos と連携するために、以下の環境変数を Cloud Console 等から追加してください：
-- `MEMOS_URL`: デプロイした Memos の URL (例: `https://memos-xxxxx-an.a.run.app`)
-- `GEMINI_API_KEY`: API キー
+**デプロイ設定**:
+`Makefile` を更新したので、デプロイ時に環境変数を直接指定できます：
+
+```sh
+make gcp-deploy \
+  PROJECT_ID=quick-send-prod \
+  REGION=asia-northeast1 \
+  MEMOS_URL=https://memos-xxxxx-an.a.run.app \
+  GEMINI_API_KEY=your-api-key
+```
+
+もちろん、Cloud Console から後で設定することも可能です。
 
 ---
 
