@@ -46,8 +46,9 @@ class FirestoreClient:
 
         count = 0
         for item in data:
-            # IDをドキュメントIDとして使用
-            doc_ref = collection_ref.document(str(item["id"]))
+            # IDをドキュメントIDとして使用 (スラッシュが含まれる場合は置換)
+            safe_id = str(item["id"]).replace("/", "_")
+            doc_ref = collection_ref.document(safe_id)
             batch.set(doc_ref, item)
             count += 1
             
