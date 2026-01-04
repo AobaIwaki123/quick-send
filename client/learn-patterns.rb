@@ -16,11 +16,12 @@ require 'json'
 require 'net/http'
 require 'uri'
 
-API_URL = "http://localhost:8080/learn"
+API_URL = "https://quick-send-api-976586712956.asia-northeast1.run.app/learn"
 
 begin
   uri = URI.parse(API_URL)
   http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = (uri.scheme == "https")
   http.read_timeout = 60  # 学習に時間がかかる場合を考慮
   
   request = Net::HTTP::Post.new(uri.request_uri)
