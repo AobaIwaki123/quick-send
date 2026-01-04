@@ -18,10 +18,10 @@ class MemosClient:
         self.token = token
         self.learn_token = learn_token
 
-    def create_memo(self, content: str) -> Dict:
+    def create_memo(self, content: str, visibility: str = "PUBLIC") -> Dict:
         """メモを作成"""
         headers = {"Authorization": f"Bearer {self.learn_token}"}
-        data = {"content": content}
+        data = {"content": content, "visibility": visibility}
         response = requests.post(f"{self.url}/api/v1/memos", headers=headers, json=data)
         response.raise_for_status()
         return response.json()
