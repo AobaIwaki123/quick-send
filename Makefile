@@ -74,7 +74,7 @@ gcp-config: ## デプロイ設定の確認
 # --- Memos Cloud Run Deployment ---
 
 MEMOS_SERVICE_NAME ?= memos
-MEMOS_LOCAL_IMAGE ?= iwakiaoba/aoba-memos:v1.0.0
+MEMOS_LOCAL_IMAGE ?= iwakiaoba/aoba-memos:v1.1.0
 MEMOS_GCR_IMAGE ?= gcr.io/$(PROJECT_ID)/memos
 MEMOS_DB_INSTANCE ?= $(PROJECT_ID):$(REGION):memos-db
 MEMOS_DB_PASS ?= your-password
