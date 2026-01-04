@@ -35,7 +35,9 @@ make gcp-deploy \
   PROJECT_ID=th-zenn-ai-hackathon \
   REGION=asia-northeast1 \
   MEMOS_URL=https://memos-xxxxx-an.a.run.app \
-  GEMINI_API_KEY=your-api-key
+  MEMOS_ACCESS_TOKEN=your-memos-access-token \
+  GEMINI_API_KEY=your-gemini-api-key \
+  GEMINI_MODEL=2.5-flash
 ```
 
 もちろん、Cloud Console から後で設定することも可能です。

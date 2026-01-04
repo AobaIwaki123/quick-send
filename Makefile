@@ -54,7 +54,9 @@ gcp-build: ## Dockerイメージをビルド (Google Cloud Build)
 	gcloud builds submit --tag $(IMAGE_NAME) .
 
 MEMOS_URL ?= ""
+MEMOS_ACCESS_TOKEN ?= ""
 GEMINI_API_KEY ?= ""
+GEMINI_MODEL ?= "2.5-flash"
 
 gcp-deploy: ## Cloud Run へデプロイ
 	gcloud run deploy $(SERVICE_NAME) \
@@ -62,7 +64,7 @@ gcp-deploy: ## Cloud Run へデプロイ
 		--platform managed \
 		--region $(REGION) \
 		--allow-unauthenticated \
-		--set-env-vars PROJECT_ID=$(PROJECT_ID),MEMOS_URL=$(MEMOS_URL),GEMINI_API_KEY=$(GEMINI_API_KEY)
+		--set-env-vars PROJECT_ID=$(PROJECT_ID),MEMOS_URL=$(MEMOS_URL),MEMOS_ACCESS_TOKEN=$(MEMOS_ACCESS_TOKEN),GEMINI_API_KEY=$(GEMINI_API_KEY),GEMINI_MODEL=$(GEMINI_MODEL)
 
 gcp-config: ## デプロイ設定の確認
 	@echo "Project: $(PROJECT_ID)"
