@@ -6,6 +6,8 @@
 
 ## システム構成
 
+## システム構成
+
 ```mermaid
 graph LR
     subgraph "Raycast"
@@ -13,9 +15,14 @@ graph LR
         R2[Learn Patterns<br/>学習呼び出し]
     end
     
-    subgraph "Docker"
-        M[Memos<br/>:5230]
+    subgraph "Google Cloud Platform / Cloud Run"
+        M[Memos Service<br/>:5230]
         API[API Server<br/>:8080]
+    end
+    
+    subgraph "Managed Databases"
+        SQL[(Cloud SQL<br/>PostgreSQL)]
+        FS[(Firestore)]
     end
     
     subgraph "Google AI"
@@ -23,17 +30,30 @@ graph LR
         G[Gemini API<br/>パターン生成]
     end
     
-    subgraph "データ"
-        D[(memos_data/)]
-    end
-    
     R1 -->|"テキスト + ラベル"| M
     R2 -->|POST /learn| API
     API -->|GET /api/v1/memos| M
+    M -->|Read/Write| SQL
+    API -->|Read/Write| FS
     API -->|感情分析| NL
     API -->|パターン生成| G
-    API -->|JSON| D
 ```
+
+## Firestore 統合とフォールバックメカニズム
+
+Cloud Run への移行に伴い、クラウド環境（ステートレス）とローカル環境（ステートフル/ファイルベース）の両方で API サーバーが動作するように、**ハイブリッド / フォールバック戦略**を実装しています。
+
+### フォールバックロジック
+
+`FirestoreClient` は初期化時に Google Cloud のクレデンシャル（認証情報）を確認します。
+- **クレデンシャルがある場合**: Firestore に接続します。
+- **クレデンシャルがない場合**: DB接続を行わずに初期化します（ローカルモード）。
+
+データ操作時：
+- **書き込み**: Firestore が利用できない場合、データはローカルファイルシステムの `memos_data/*.json` に保存されます。
+- **読み込み**: Firestore が利用できない、またはデータが空の場合、システムはローカルの `memos_data/*.json` ファイルからの読み込みを試みます。
+
+これにより、Google Cloud 環境が完全に構成される前でも、既存の JSON データを使用してローカルでの開発を継続できます。
 
 ## 学習パイプライン
 
@@ -42,6 +62,7 @@ sequenceDiagram
     participant API as API Server
     participant NL as Natural Language API
     participant Gemini
+    participant FS as Firestore/JSON
     
     API->>API: Memosからデータ収集
     
@@ -53,7 +74,7 @@ sequenceDiagram
     API->>API: 特徴量を集計
     API->>Gemini: プロンプト + 特徴量
     Gemini-->>API: パターン (JSON)
-    API->>API: learned_patterns.json 保存
+    API->>FS: learned_patterns 保存
 ```
 
 ## ディレクトリ構成
@@ -66,13 +87,14 @@ quick-send/
 ├── server/
 │   ├── app.py              # API サーバー
 │   ├── nl_api.py           # Natural Language API クライアント
-│   └── gemini.py           # Gemini API クライアント
+│   ├── gemini.py           # Gemini API クライアント
+│   └── firestore_client.py # Firestore クライアント (New)
 ├── prompts/
 │   ├── system.md
 │   └── pattern_learning.md
 ├── memos_data/
-│   ├── collected_texts.json
-│   └── learned_patterns.json
+│   ├── collected_texts.json # ローカルフォールバック用
+│   └── learned_patterns.json # ローカルフォールバック用
 └── compose.yml
 ```
 
@@ -87,13 +109,14 @@ quick-send/
 
 ## 環境変数
 
-| 変数名               | 説明                     | デフォルト     |
-| -------------------- | ------------------------ | -------------- |
-| `MEMOS_URL`          | Memos API エンドポイント | localhost:5230 |
-| `MEMOS_ACCESS_TOKEN` | Memos アクセストークン   | -              |
-| `GEMINI_API_KEY`     | Gemini API キー          | -              |
-| `GEMINI_MODEL`       | 使用モデル               | 2.5-flash      |
-| `ENABLE_NL_API`      | NL API を有効化          | false          |
+| 変数名                 | 説明                     | デフォルト     |
+| ---------------------- | ------------------------ | -------------- |
+| `MEMOS_URL`            | Memos API エンドポイント | localhost:5230 |
+| `MEMOS_ACCESS_TOKEN`   | Memos アクセストークン   | -              |
+| `GEMINI_API_KEY`       | Gemini API キー          | -              |
+| `GEMINI_MODEL`         | 使用モデル               | 2.5-flash      |
+| `ENABLE_NL_API`        | NL API を有効化          | false          |
+| `GOOGLE_CLOUD_PROJECT` | GCP プロジェクト ID      | -              |
 
 ## Gemini モデル
 

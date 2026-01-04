@@ -61,6 +61,50 @@ $ make cp-raycast-script
 3. プライバシーとセキュリティ -> オートメーション を開く。
    1. Raycast の項目を展開し、System Events が ON になっているか確認。
 
+## Cloud Deployment Setup
+
+Cloud Run にデプロイする場合のセットアップ手順です。
+
+### 1. Google Cloud プロジェクトのセットアップ
+
+1.  **プロジェクトの作成**: [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成。
+2.  **API の有効化**:
+    - Cloud Run API
+    - Artifact Registry API
+    - Firestore API
+    - Cloud SQL Admin API
+
+### 2. Firestore のセットアップ
+
+1.  Cloud Console で **Firestore** を作成（ネイティブモード推奨）。
+2.  **ロケーション**: `asia-northeast1` (東京) など。
+
+### 3. Cloud SQL (PostgreSQL) のセットアップ
+
+Memos 本体をデプロイする場合に必要です。
+
+1.  Cloud Console で **SQL** (PostgreSQL) インスタンスを作成。
+2.  データベース `memos` とユーザーを作成。
+
+### 4. ローカル開発用認証情報
+
+Firestore をローカルから接続する場合：
+
+1.  サービスアカウントを作成し、`Cloud Datastore User` ロールを付与。
+2.  キー (JSON) をダウンロードし、環境変数設定：
+    ```sh
+    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+    export GOOGLE_CLOUD_PROJECT="your-project-id"
+    ```
+
+## Database Migration (SQLite -> Cloud SQL)
+
+Cloud Run 運用へ移行する際、SQLite (`memos_prod.db`) から Cloud SQL への移行が必要です。
+
+推奨手順:
+1.  **フレッシュスタート**: 新しいデータベースで開始し、必要なメモだけ手動移行。
+2.  **Memos エクスポート/インポート**: Memos の `Settings` > `System` > `Export & Import` 機能を使用。
+
 ## Reference
 
 - [Memos - GitHub](https://github.com/usememos/memos)
