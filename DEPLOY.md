@@ -4,7 +4,7 @@
 
 ## 事前準備
 
-1.  **GCP プロジェクトの設定**: [MANUAL.md](./MANUAL.md) の手順が完了していることを確認してください。
+1.  **GCP プロジェクトの設定**: [README.md](./README.md) の "Cloud Deployment Setup" 手順が完了していることを確認してください。
 2.  **gcloud CLI**: インストール済みで、認証が完了していること (`gcloud auth login`)。
 3.  **プロジェクト設定**: `gcloud config set project [YOUR_PROJECT_ID]`。
 
@@ -37,6 +37,7 @@ make gcp-deploy \
   MEMOS_URL=https://memos-xxxxx-an.a.run.app \
   MEMOS_ACCESS_TOKEN=your-memos-access-token \
   GEMINI_API_KEY=your-gemini-api-key \
+  MEMOS_LEARN_AGENT_TOKEN=optional-agent-token \
   GEMINI_MODEL=2.5-flash
 ```
 
@@ -49,7 +50,7 @@ make gcp-deploy \
 Memos 本体を Cloud Run にデプロイします。こちらは Dockerfile のビルドは不要で、公式イメージを使用します。
 
 ### 1. Cloud SQL 接続情報の確認
-以下の情報を用意してください（`MANUAL.md` で作成したもの）。
+以下の情報を用意してください（`README.md` で作成したもの）。
 - **接続名**: `Project-ID:Region:Instance-ID` (例: `th-zenn-ai-hackathon:asia-northeast1:memos-db`)
 - **DBユーザー**: `memos`
 - **DBパスワード**: `[PASSWORD]`
