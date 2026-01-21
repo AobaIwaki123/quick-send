@@ -55,15 +55,9 @@ class APIHandler(BaseHTTPRequestHandler):
                 # 学習完了通知
                 try:
                     from .memos_client import memos_client
+                    from .pattern_formatter import format_patterns_for_post
                     
-                    patterns = learn_result.get("patterns", {})
-                    analysis = learn_result.get("analysis", {})
-                    
-                    ai_bad_count = len(patterns.get("ai_bad", []))
-                    good_count = len(patterns.get("good", []))
-                    summary = analysis.get("advice", {}).get("summary", "分析完了")
-                    
-                    content = f"📚 **Learning Completed**\n\n- AI Bad Patterns: {ai_bad_count}\n- Good Patterns: {good_count}\n\n**Summary:** {summary}\n\n#learn"
+                    content = format_patterns_for_post(learn_result)
                     memos_client.create_memo(content)
                 except Exception as e:
                     print(f"Failed to post notification: {e}")
