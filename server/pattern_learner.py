@@ -38,10 +38,12 @@ class PatternLearner:
 
     def learn_patterns(self, dataset: Dict[str, List[str]]) -> Dict:
         """
-        データセットからパターンを学習
+        データセットからパターンを学習（3ステップ構成）
 
-        1. NL API で各テキストの感情分析を実行
-        2. Gemini でパターンを抽出・言語化
+        Step 1: AI感がある文章からパターンを抽出
+        Step 2: 良い文章からパターンを抽出  
+        Step 3: 両者を比較・分析し、改善アドバイスを生成
+        最後にPythonコードでマージ（情報欠落を防ぐ）
         """
         # 1. NL API で特徴抽出（感情分析）
         features = {"ai_bad": [], "good": []}
@@ -61,23 +63,115 @@ class PatternLearner:
             "good": self._calc_stats(features["good"])
         }
 
-        # 3. プロンプトを構築
-        prompt = self._build_prompt(dataset, stats)
+        # Step 1: AI感がある文章のパターン抽出
+        print("🔍 Step 1: Extracting patterns from ai_bad texts...")
+        bad_patterns = self._extract_patterns(dataset["ai_bad"], mode="bad")
 
-        # 4. Gemini でパターン生成
-        system_instruction = self._load_system_instruction()
-        patterns = gemini_client.generate_json(prompt, system_instruction)
+        # Step 2: 良い文章のパターン抽出
+        print("🔍 Step 2: Extracting patterns from good texts...")
+        good_patterns = self._extract_patterns(dataset["good"], mode="good")
+
+        # Step 3: 比較・分析
+        print("🔍 Step 3: Analyzing and comparing patterns...")
+        analysis = self._analyze_patterns(bad_patterns, good_patterns)
+
+        # Pythonコードでマージ（情報欠落なし）
+        patterns = {
+            "version": "2.0",
+            "patterns": {
+                "ai_bad": bad_patterns.get("patterns", []),
+                "good": good_patterns.get("patterns", [])
+            },
+            "analysis": analysis
+        }
 
         # メタデータを追加
         patterns["metadata"] = {
             "ai_bad_count": len(dataset["ai_bad"]),
             "good_count": len(dataset["good"]),
+            "ai_bad_patterns_count": len(patterns["patterns"]["ai_bad"]),
+            "good_patterns_count": len(patterns["patterns"]["good"]),
             "sentiment_stats": stats,
             "model": gemini_client.model_name,
             "nl_api_enabled": nl_client.enabled
         }
 
         return patterns
+
+    def _extract_patterns(self, texts: List[str], mode: str) -> Dict:
+        """
+        Step 1/2: テキストからパターンを抽出
+
+        Args:
+            texts: 分析対象のテキストリスト
+            mode: "bad" または "good"
+
+        Returns:
+            抽出されたパターンのJSON
+        """
+        if not texts:
+            return {"patterns": []}
+
+        # プロンプトを読み込み
+        prompt_path = PROMPTS_DIR / "extract_patterns.md"
+        if prompt_path.exists():
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                prompt_template = f.read()
+            prompt = prompt_template.format(
+                examples=self._format_examples(texts)
+            )
+        else:
+            prompt = f"""
+以下の文章から共通するパターンを詳細に抽出してください。要約せず、具体例を含めてください。
+
+{self._format_examples(texts)}
+
+JSON形式で出力してください。
+"""
+
+        # モードに応じたシステム指示
+        if mode == "bad":
+            system_instruction = "あなたは「AI感がある」文章のパターンを分析する専門家です。ユーザーがラベル付けしたデータから、AIらしさの特徴を網羅的に抽出してください。"
+        else:
+            system_instruction = "あなたは「自然で良い」文章のパターンを分析する専門家です。ユーザーがラベル付けしたデータから、良い文章の特徴を網羅的に抽出してください。"
+
+        return gemini_client.generate_json(prompt, system_instruction)
+
+    def _analyze_patterns(self, bad_patterns: Dict, good_patterns: Dict) -> Dict:
+        """
+        Step 3: パターンを比較・分析
+
+        Args:
+            bad_patterns: AI感があるパターン
+            good_patterns: 良いパターン
+
+        Returns:
+            比較分析結果（comparison, advice）
+        """
+        # プロンプトを読み込み
+        prompt_path = PROMPTS_DIR / "analyze_patterns.md"
+        if prompt_path.exists():
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                prompt_template = f.read()
+            prompt = prompt_template.format(
+                bad_patterns=json.dumps(bad_patterns.get("patterns", []), ensure_ascii=False, indent=2),
+                good_patterns=json.dumps(good_patterns.get("patterns", []), ensure_ascii=False, indent=2)
+            )
+        else:
+            prompt = f"""
+以下の2つのパターンリストを比較し、改善アドバイスを生成してください。
+パターンリスト自体は出力せず、analysisオブジェクトのみを返してください。
+
+AI感があるパターン:
+{json.dumps(bad_patterns.get("patterns", []), ensure_ascii=False, indent=2)}
+
+良いパターン:
+{json.dumps(good_patterns.get("patterns", []), ensure_ascii=False, indent=2)}
+"""
+
+        system_instruction = "あなたは文章改善のアドバイザーです。2つのパターンリストを比較し、具体的で実践的な改善アドバイスを提供してください。"
+
+        return gemini_client.generate_json(prompt, system_instruction)
 
     def run(self) -> Dict:
         """学習処理を実行"""
@@ -100,8 +194,11 @@ class PatternLearner:
 
         return {
             "success": True,
-            "patterns_count": len(patterns.get("patterns", [])),
-            "patterns": patterns.get("patterns", []),
+            "version": patterns.get("version", "2.0"),
+            "ai_bad_patterns_count": len(patterns.get("patterns", {}).get("ai_bad", [])),
+            "good_patterns_count": len(patterns.get("patterns", {}).get("good", [])),
+            "patterns": patterns.get("patterns", {}),
+            "analysis": patterns.get("analysis", {}),
             "ai_bad_count": len(dataset["ai_bad"]),
             "good_count": len(dataset["good"])
         }
