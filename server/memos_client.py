@@ -17,7 +17,7 @@ class MemosClient:
         self.url = url
         self.token = token
 
-    def create_memo(self, content: str, visibility: str = "PUBLIC") -> Dict:
+    def create_memo(self, content: str, visibility: str = "PRIVATE") -> Dict:
         """メモを作成"""
         headers = {"Authorization": f"Bearer {self.token}"}
         data = {"content": content, "visibility": visibility}
