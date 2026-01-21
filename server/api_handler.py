@@ -56,10 +56,14 @@ class APIHandler(BaseHTTPRequestHandler):
                 try:
                     from .memos_client import memos_client
                     
-                    patterns = learn_result.get("patterns", [])
-                    pattern_json = json.dumps(patterns, ensure_ascii=False, indent=2)
+                    patterns = learn_result.get("patterns", {})
+                    analysis = learn_result.get("analysis", {})
                     
-                    content = f"Learning completed.\n\n```json\n{pattern_json}\n```\n\n#learn"
+                    ai_bad_count = len(patterns.get("ai_bad", []))
+                    good_count = len(patterns.get("good", []))
+                    summary = analysis.get("advice", {}).get("summary", "分析完了")
+                    
+                    content = f"📚 **Learning Completed**\n\n- AI Bad Patterns: {ai_bad_count}\n- Good Patterns: {good_count}\n\n**Summary:** {summary}\n\n#learn"
                     memos_client.create_memo(content)
                 except Exception as e:
                     print(f"Failed to post notification: {e}")
