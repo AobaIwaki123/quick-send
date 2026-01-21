@@ -132,7 +132,7 @@ def _format_ai_bad_post(ai_bad: List[Dict]) -> str:
     for i, pattern in enumerate(ai_bad[:NUM_AI_BAD], 1):
         lines.extend(_format_pattern(i, pattern))
     
-    lines.append("#learn #ai_bad")
+    lines.append("#learn")
     
     return "\n".join(lines)
 
@@ -144,7 +144,7 @@ def _format_good_post(good: List[Dict]) -> str:
     for i, pattern in enumerate(good[:NUM_GOOD], 1):
         lines.extend(_format_pattern(i, pattern))
     
-    lines.append("#learn #good")
+    lines.append("#learn")
     
     return "\n".join(lines)
 
