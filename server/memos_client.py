@@ -22,7 +22,13 @@ class MemosClient:
         headers = {"Authorization": f"Bearer {self.token}"}
         data = {"content": content, "visibility": visibility}
         response = requests.post(f"{self.url}/api/v1/memos", headers=headers, json=data)
-        response.raise_for_status()
+        
+        if not response.ok:
+            print(f"❌ Memos API Error: {response.status_code}")
+            print(f"   Response: {response.text}")
+            print(f"   Content length: {len(content)}")
+            response.raise_for_status()
+        
         return response.json()
 
     def fetch_memos(self) -> List[Dict]:

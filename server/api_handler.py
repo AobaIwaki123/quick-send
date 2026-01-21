@@ -52,13 +52,18 @@ class APIHandler(BaseHTTPRequestHandler):
             if "error" in learn_result:
                 self.send_json(learn_result, status=400)
             else:
-                # 学習完了通知
+                # 学習完了通知（3つの投稿に分割）
                 try:
                     from .memos_client import memos_client
-                    from .pattern_formatter import format_patterns_for_post
+                    from .pattern_formatter import format_patterns_for_posts
                     
-                    content = format_patterns_for_post(learn_result)
-                    memos_client.create_memo(content)
+                    posts = format_patterns_for_posts(learn_result)
+                    for i, content in enumerate(posts):
+                        try:
+                            memos_client.create_memo(content)
+                            print(f"✅ Posted memo {i+1}/{len(posts)}")
+                        except Exception as e:
+                            print(f"❌ Failed to post memo {i+1}: {e}")
                 except Exception as e:
                     print(f"Failed to post notification: {e}")
 
