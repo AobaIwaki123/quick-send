@@ -1,3 +1,7 @@
+# .envファイルから環境変数を読み込む（存在しない場合はスキップ）
+-include .env
+export
+
 .PHONY: help up down logs collect learn clean cp-raycast-scripts
 
 help: ## このヘルプを表示
@@ -55,7 +59,6 @@ gcp-build: ## Dockerイメージをビルド (Google Cloud Build)
 
 MEMOS_URL ?= ""
 MEMOS_ACCESS_TOKEN ?= ""
-MEMOS_LEARN_AGENT_TOKEN ?= ""
 GEMINI_API_KEY ?= ""
 GEMINI_MODEL ?= "2.5-flash"
 
@@ -65,7 +68,7 @@ gcp-deploy: ## Cloud Run へデプロイ
 		--platform managed \
 		--region $(REGION) \
 		--allow-unauthenticated \
-		--set-env-vars PROJECT_ID=$(PROJECT_ID),MEMOS_URL=$(MEMOS_URL),MEMOS_ACCESS_TOKEN=$(MEMOS_ACCESS_TOKEN),MEMOS_LEARN_AGENT_TOKEN=$(MEMOS_LEARN_AGENT_TOKEN),GEMINI_API_KEY=$(GEMINI_API_KEY),GEMINI_MODEL=$(GEMINI_MODEL)
+		--set-env-vars PROJECT_ID=$(PROJECT_ID),MEMOS_URL=$(MEMOS_URL),MEMOS_ACCESS_TOKEN=$(MEMOS_ACCESS_TOKEN),GEMINI_API_KEY=$(GEMINI_API_KEY),GEMINI_MODEL=$(GEMINI_MODEL)
 
 gcp-config: ## デプロイ設定の確認
 	@echo "Project: $(PROJECT_ID)"

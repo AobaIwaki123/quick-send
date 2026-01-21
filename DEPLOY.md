@@ -15,7 +15,6 @@
 Docker イメージをビルドし、Cloud Build を使用して Google Container Registry (GCR) にプッシュします。
 
 ```sh
-# 'your-project-id' を実際のプロジェクトIDに置き換えてください
 make gcp-build PROJECT_ID=th-zenn-ai-hackathon
 ```
 
@@ -25,10 +24,6 @@ make gcp-build PROJECT_ID=th-zenn-ai-hackathon
 make gcp-deploy \
   PROJECT_ID=th-zenn-ai-hackathon \
   REGION=asia-northeast1 \
-  MEMOS_URL=https://memos-xxxxx-an.a.run.app \
-  MEMOS_ACCESS_TOKEN=your-memos-access-token \
-  GEMINI_API_KEY=your-gemini-api-key \
-  MEMOS_LEARN_AGENT_TOKEN=optional-agent-token \
   GEMINI_MODEL=2.5-flash
 ```
 

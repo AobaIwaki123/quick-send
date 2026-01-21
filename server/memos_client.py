@@ -7,20 +7,19 @@ from typing import Dict, List
 
 import requests
 
-from .config import MEMOS_URL, MEMOS_ACCESS_TOKEN, MEMOS_LEARN_AGENT_TOKEN
+from .config import MEMOS_URL, MEMOS_ACCESS_TOKEN
 
 
 class MemosClient:
     """Memos API との通信を担当"""
 
-    def __init__(self, url: str = MEMOS_URL, token: str = MEMOS_ACCESS_TOKEN, learn_token: str = MEMOS_LEARN_AGENT_TOKEN):
+    def __init__(self, url: str = MEMOS_URL, token: str = MEMOS_ACCESS_TOKEN):
         self.url = url
         self.token = token
-        self.learn_token = learn_token
 
     def create_memo(self, content: str, visibility: str = "PUBLIC") -> Dict:
         """メモを作成"""
-        headers = {"Authorization": f"Bearer {self.learn_token}"}
+        headers = {"Authorization": f"Bearer {self.token}"}
         data = {"content": content, "visibility": visibility}
         response = requests.post(f"{self.url}/api/v1/memos", headers=headers, json=data)
         response.raise_for_status()
